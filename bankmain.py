@@ -16,15 +16,34 @@ def login():
             else:
                 st.error("잘못된 아이디 또는 비밀번호")
 
+# 상단 메뉴 바 (수정된 버전)
+def show_menu():
+    st.markdown("""
+    <style>
+    .menu {
+        display: flex;
+        justify-content: space-around;
+        padding: 10px;
+        background: #f0f2f6;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    .menu a {
+        color: black;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    </style>
+    <div class="menu">
+        <a href="#">🏠 홈</a>
+        <a href="#">💰 입금</a>
+        <a href="#">💳 출금</a>
+    </div>
+    """, unsafe_allow_html=True)
+
 # 메인 페이지
 def main():
-    # 상단 메뉴 바
-    menu = st.container()
-    with menu:
-        cols = st.columns(3)
-        with cols[0]: st.page_link("main.py", label="🏠 홈")
-        with cols[1]: st.page_link("deposit.py", label="💰 입금")
-        with cols[2]: st.page_link("withdraw.py", label="💳 출금")
+    show_menu()  # 수정된 메뉴 표시
     
     st.title("📈 적금 관리 시스템")
     
