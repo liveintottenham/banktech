@@ -1,84 +1,164 @@
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 
 # 페이지 설정
 st.set_page_config(
-    page_title="積立貯蓄のお知らせ",
-    page_icon="📊",
-    layout="wide"
+    page_title="JP Bank - 적금 관리 시스템",
+    page_icon="🏦",
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
-# 사이드바 입력 섹션
-with st.sidebar:
-    st.header("基本情報入力")
-    emp_name = st.text_input("氏名")
-    emp_number = st.text_input("社員番号")
-    report_date = st.date_input("報告基準日", datetime.today())
+# CSS 스타일링
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap');
 
-# 메인 콘텐츠 영역
-st.title("積立貯蓄のお知らせ")
-st.divider()
+html, body, [class*="css"] {
+    font-family: 'Nanum Gothic', sans-serif;
+}
 
-# 섹션 A: 積立内容
-with st.expander("Ⓐ お積立内容", expanded=True):
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        start_date = st.date_input("積立開始日")
-    with col2:
-        st.text_input("積立コース", "定期預金", disabled=True)
-    with col3:
-        monthly_amount = st.number_input("毎月積立額 (円)", min_value=0, step=1000)
-    with col4:
-        bonus_amount = st.number_input("賞与積立額 (円)", min_value=0, step=1000)
+/* 상단 네비게이션 바 */
+.stApp header {
+    background: #2E3B4E;
+    color: white !important;
+    padding: 1rem 2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
 
-# 섹션 B: 残高 및 이동 명세
-with st.expander("Ⓑ お預かり残高および異動明細", expanded=True):
-    cols = st.columns(6)
-    previous_balance = cols[0].number_input("前回残高 (円)", min_value=0)
-    deposits = cols[1].number_input("入金合計 (円)", min_value=0)
-    withdrawals = cols[2].number_input("出金合計 (円)", min_value=0)
-    income = cols[3].number_input("手取収益 (円)", min_value=0)
-    other = cols[4].number_input("その他入出金 (円)", value=0)
-    current_balance = cols[5].number_input("現在残高 (円)", min_value=0)
+/* 입력 섹션 스타일 */
+.input-section {
+    background: #F8F9FA;
+    border-radius: 15px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
 
-# 섹션 C: 金銭信託口座
-with st.expander("Ⓒ お預かり残高内訳(金銭信託口座)"):
-    trust_cols = st.columns(5)
-    trust_account = trust_cols[0].text_input("口座番号")
-    trust_principal = trust_cols[1].number_input("元本 (円)", min_value=0)
-    trust_open_date = trust_cols[2].date_input("口座開設日")
-    trust_years = trust_cols[3].number_input("開設経過年数", min_value=0)
-    trust_rate = trust_cols[4].number_input("予定配当率 (%)", min_value=0.0, format="%.2f")
+/* 정보 표시 카드 */
+.info-card {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    margin: 1rem 0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border-left: 4px solid #2E3B4E;
+}
 
-# 섹션 D: 定期預金口座
-with st.expander("Ⓓ お預かり残高内訳(定期預金口座)"):
-    deposit_cols = st.columns(4)
-    deposit_account = deposit_cols[0].text_input("口座番号 ")
-    deposit_principal = deposit_cols[1].number_input("元本 (円) ", min_value=0)
-    deposit_rate = deposit_cols[2].number_input("約定利率 (%)", min_value=0.0, format="%.2f")
-    deposit_maturity = deposit_cols[3].date_input("満期日")
+/* 테이블 스타일 */
+table.dataframe {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
 
-# 리포트 생성 버튼
-if st.button("報告書生成"):
-    # 데이터 프레임 생성 예시
-    report_data = {
-        "項目": ["氏名", "社員番号", "報告日", "現在残高"],
-        "内容": [emp_name, emp_number, report_date, f"{current_balance:,} 円"]
-    }
+table.dataframe th {
+    background: #2E3B4E !important;
+    color: white !important;
+    font-weight: 700;
+}
+
+table.dataframe td, table.dataframe th {
+    padding: 1rem !important;
+    text-align: center !important;
+}
+
+/* 버튼 스타일 */
+.stButton>button {
+    background: #2E3B4E !important;
+    color: white !important;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s;
+}
+
+.stButton>button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+</style>
+""", unsafe_allow_html=True)
+
+# 입력 폼 섹션
+with st.container():
+    st.header("🎯 적금 계좌 신규 등록")
+    with st.form("savings_form"):
+        cols = st.columns([1,1,2,1])
+        with cols[0]: name = st.text_input("고객명", placeholder="홍길동")
+        with cols[1]: emp_num = st.text_input("사원번호", placeholder="12345678")
+        with cols[2]: account = st.text_input("계좌번호", placeholder="098-96586-6521")
+        with cols[3]: start_date = st.date_input("적금 시작일", datetime(2025,2,25))
+
+        cols2 = st.columns([1,1,1,1])
+        with cols2[0]: unit_price = st.number_input("1구좌당 가격 (¥)", min_value=1000, step=100, value=1100)
+        with cols2[1]: units = st.number_input("신청구좌 수", min_value=1, max_value=10, step=1, value=4)
+        with cols2[2]: years = st.selectbox("만기기간", [1,2,3,5], index=2)
+        with cols2[3]: interest = st.number_input("연이자율 (%)", min_value=0.0, max_value=15.0, value=10.03, step=0.01)
+
+        if st.form_submit_button("💾 저장하기", use_container_width=True):
+            st.session_state.saved_data = True
+
+# 저장된 데이터 표시
+if 'saved_data' in st.session_state:
+    # 회원 정보 계산
+    maturity_date = start_date + timedelta(days=365*years)
+    monthly_deposit = unit_price * units
+    inquiry_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    # 리포트 표시
-    st.success("報告書が生成されました")
-    st.divider()
-    
-    # PDF 생성 기능 추가 가능 (reportlab 등 라이브러리 사용)
-    st.download_button(
-        label="PDFでダウンロード",
-        data=pd.DataFrame(report_data).to_csv().encode('utf-8'),
-        file_name=f"積立報告書_{emp_name}_{report_date}.csv",
-        mime="text/csv"
-    )
+    # 회원 정보 표시
+    with st.container():
+        st.header("📋 회원 정보")
+        info_cols = st.columns([1,1,1,1])
+        info_cols[0].metric("고객명", name)
+        info_cols[1].metric("사원번호", emp_num)
+        info_cols[2].metric("계좌번호", account)
+        info_cols[3].metric("조회일시", inquiry_time)
+        
+        st.divider()
+        
+        # 적금 정보 테이블
+        savings_info = pd.DataFrame({
+            "적금 시작일": [start_date.strftime("%Y-%m-%d")],
+            "만기 예정일": [maturity_date.strftime("%Y-%m-%d")],
+            "월 입금액": [f"¥{monthly_deposit:,}"],
+            "총 적금액": [f"¥{(monthly_deposit * years*12):,}"],
+            "예상 만기수령액": [f"¥{int(monthly_deposit * years*12 * (1 + interest/100)):,}"]
+        }).T.reset_index()
+        
+        st.table(savings_info.style.set_properties(**{
+            'font-size': '16px',
+            'text-align': 'center',
+            'background-color': '#F8F9FA'
+        }))
 
-# Footer
-st.divider()
-st.caption("※記載内容に相違がある場合は、積立貯蓄のお知らせに記載の照会先へご連絡ください。")
+    # 입금 내역 생성
+    st.header("📅 입금 내역")
+    deposit_data = []
+    current_balance = 0
+    
+    for i in range(1, years*12 +1):
+        deposit_date = start_date + timedelta(days=30*(i-1))
+        current_balance += monthly_deposit
+        monthly_interest = current_balance * (interest/100)/12
+        
+        deposit_data.append([
+            f"{i}회차 ({deposit_date.strftime('%y.%m.%d')})",
+            f"¥{monthly_deposit:,}",
+            f"¥{current_balance:,}",
+            f"¥{monthly_interest:,.1f}",
+            "✅ 입금완료" if deposit_date < datetime.now() else "⏳ 대기중"
+        ])
+    
+    # 테이블 표시
+    df = pd.DataFrame(deposit_data, columns=[
+        "회차별 안내", "입금액", "잔액", "예상이자", "입금확인"
+    ]).set_index("회차별 안내")
+    
+    st.dataframe(df, use_container_width=True, height=600)
+    
+    # 액션 버튼
+    btn_cols = st.columns([1,1,1,5])
+    btn_cols[0].button("🚫 해지하기", use_container_width=True)
+    btn_cols[1].button("🔄 구좌 변경", use_container_width=True)
+    btn_cols[2].button("💸 분할납부", use_container_width=True)
