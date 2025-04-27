@@ -43,10 +43,9 @@ def show_menu():
 
 # 메인 페이지
 def main():
-    show_menu()  # 수정된 메뉴 표시
-    
-    st.title("📈 적금 관리 시스템")
-    
+    show_menu()
+    st.title("📈 적금 관리 시스템 (v2)")
+
     # 적금 계좌 등록 폼
     with st.expander("🎯 적금 계좌 신규 등록", expanded=True):
         with st.form("savings_form"):
@@ -68,80 +67,87 @@ def main():
                     "start_date": start_date, "unit_price": unit_price,
                     "original_units": units, "current_units": units,
                     "years": years, "interest": interest,
-                    "adjustments": []
+                    "adjustments": [],
+                    "extra_payments": []
                 }
                 st.rerun()
 
-    # 저장된 데이터 표시
     if 'savings_data' in st.session_state:
         data = st.session_state.savings_data
-        monthly_deposit = data['unit_price'] * data['current_units']
-        maturity_date = data['start_date'] + relativedelta(years=data['years'])
-        
-        # 회원 정보 표시
-        st.header("👤 회원 정보")
-        info_cols = st.columns([1,1,1,1])
-        info_cols[0].metric("고객명", data['name'])
-        info_cols[1].metric("사원번호", data['emp_num'])
-        info_cols[2].metric("계좌번호", data['account'])
-        info_cols[3].metric("조회일시", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        original_monthly = data['unit_price'] * data['original_units']
         
         # 구좌 조정 기능
-        with st.expander("🔧 구좌 변경", expanded=False):
+        with st.expander("🔧 납입 조정", expanded=True):
             with st.form("adjust_form"):
-                new_units = st.number_input(
-                    "변경할 구좌 수", 
-                    min_value=max(1, data['original_units']//2), 
-                    max_value=data['original_units'],
-                    value=data['original_units']//2,
-                    step=1
-                )
-                if st.form_submit_button("구좌 변경 적용"):
-                    if new_units != data['current_units']:
+                adjust_month = st.number_input("조정할 회차", min_value=1, step=1)
+                new_amount = st.number_input("조정 금액 (¥)", 
+                                           min_value=original_monthly//2,
+                                           max_value=original_monthly,
+                                           value=original_monthly//2,
+                                           step=100)
+                
+                if st.form_submit_button("조정 적용"):
+                    if new_amount < original_monthly:
+                        remaining = original_monthly - new_amount
                         data['adjustments'].append({
-                            "date": datetime.now().date(),
-                            "from": data['current_units'],
-                            "to": new_units
+                            "month": adjust_month,
+                            "adjusted_amount": new_amount,
+                            "remaining": remaining
                         })
-                        data['current_units'] = new_units
+                        data['extra_payments'].append(remaining)
                         st.rerun()
-        
-        # 입금 내역 생성
-        st.header("📊 입금 내역")
+
+        # 입금 일정 생성
         deposit_data = []
         current_balance = 0
-        total_months = data['years'] * 12
-        adjusted = False
+        total_months = data['years'] * 12 + len(data['extra_payments'])
+        base_schedule = [original_monthly] * (data['years'] * 12)
         
-        for i in range(1, total_months + 1 + len(data['adjustments'])):
-            deposit_date = data['start_date'] + relativedelta(months=+(i-1))
-            
-            # 조정 여부 확인
-            current_deposit = data['unit_price'] * data['current_units']
-            if not adjusted and data['adjustments']:
-                if i == 1:  # 첫 달 조정
-                    current_deposit = data['unit_price'] * (data['original_units'] // 2)
-                    adjusted = True
-            
-            current_balance += current_deposit
+        # 조정 사항 적용
+        for adj in data['adjustments']:
+            if adj["month"]-1 < len(base_schedule):
+                base_schedule[adj["month"]-1] = adj["adjusted_amount"]
+        
+        # 추가 회차 생성
+        full_schedule = base_schedule + data['extra_payments']
+        
+        # 입금 내역 생성
+        for idx, amount in enumerate(full_schedule):
+            deposit_date = data['start_date'] + relativedelta(months=idx)
+            current_balance += amount
             monthly_interest = current_balance * (data['interest']/100)/12
             
             status = "✅ 입금완료" if deposit_date < datetime.now().date() else "⏳ 대기중"
+            note = ""
             
+            # 조정 사항 표시
+            for adj in data['adjustments']:
+                if adj["month"] == idx+1:
+                    note = f"🔻 조적적용 ({adj['adjusted_amount']}¥)"
+                elif idx+1 > len(base_schedule):
+                    note = "➕ 추가 회차"
+
             deposit_data.append([
-                f"{i}회차 ({deposit_date.strftime('%y.%m.%d')})",
-                f"¥{current_deposit:,}",
+                f"{idx+1}회차 ({deposit_date.strftime('%y.%m.%d')}",
+                f"¥{amount:,}",
                 f"¥{current_balance:,}",
                 f"¥{monthly_interest:,.1f}",
-                status
+                status,
+                note
             ])
-        
+
         # 테이블 표시
         df = pd.DataFrame(deposit_data, columns=[
-            "회차별 안내", "입금액", "잔액", "예상이자", "입금확인"
-        ]).set_index("회차별 안내")
+            "회차", "입금액", "잔액", "예상이자", "상태", "비고"
+        ]).set_index("회차")
         
         st.dataframe(df, use_container_width=True, height=600)
+        
+        # 통계 정보
+        total_payment = sum(full_schedule)
+        total_interest = sum(row[3] for row in deposit_data)
+        st.metric("💰 총 납입액", f"¥{total_payment:,}")
+        st.metric("💹 예상 총 이자", f"¥{total_interest:,.1f}")
         
         # 액션 버튼
         btn_cols = st.columns([1,1,1,5])
