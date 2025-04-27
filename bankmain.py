@@ -1,5 +1,6 @@
 import streamlit as st
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 import pandas as pd
 
 # 페이지 설정
@@ -138,18 +139,21 @@ if 'saved_data' in st.session_state:
     current_balance = 0
     
     for i in range(1, years*12 +1):
-        deposit_date = start_date + timedelta(days=30*(i-1))
+        deposit_date = start_date + relativedelta(months=+(i-1))
         current_balance += monthly_deposit
         monthly_interest = current_balance * (interest/100)/12
-        
+    
+        # 수정된 비교 구문 (.date() 추가)
+        status = "✅ 입금완료" if deposit_date < datetime.now().date() else "⏳ 대기중"
+    
         deposit_data.append([
             f"{i}회차 ({deposit_date.strftime('%y.%m.%d')})",
             f"¥{monthly_deposit:,}",
             f"¥{current_balance:,}",
             f"¥{monthly_interest:,.1f}",
-            "✅ 입금완료" if deposit_date < datetime.now() else "⏳ 대기중"
+            status  # 수정된 변수 사용
         ])
-    
+
     # 테이블 표시
     df = pd.DataFrame(deposit_data, columns=[
         "회차별 안내", "입금액", "잔액", "예상이자", "입금확인"
