@@ -16,23 +16,12 @@ def login():
             else:
                 st.error("잘못된 아이디 또는 비밀번호")
 
-# 상단 메뉴 바 (수정된 버전)
+# 상단 메뉴 바
 def show_menu():
     st.markdown("""
     <style>
-    .menu {
-        display: flex;
-        justify-content: space-around;
-        padding: 10px;
-        background: #f0f2f6;
-        border-radius: 10px;
-        margin-bottom: 20px;
-    }
-    .menu a {
-        color: black;
-        text-decoration: none;
-        font-weight: bold;
-    }
+    .menu { display: flex; justify-content: space-around; padding: 10px; background: #f0f2f6; border-radius: 10px; margin-bottom: 20px; }
+    .menu a { color: black; text-decoration: none; font-weight: bold; }
     </style>
     <div class="menu">
         <a href="#">🏠 홈</a>
@@ -44,7 +33,7 @@ def show_menu():
 # 메인 페이지
 def main():
     show_menu()
-    st.title("📈 적금 관리 시스템 (v2)")
+    st.title("📈 적금 관리 시스템 (최종)")
 
     # 적금 계좌 등록 폼
     with st.expander("🎯 적금 계좌 신규 등록", expanded=True):
@@ -75,6 +64,15 @@ def main():
     if 'savings_data' in st.session_state:
         data = st.session_state.savings_data
         original_monthly = data['unit_price'] * data['original_units']
+        maturity_date = data['start_date'] + relativedelta(years=data['years'])
+        
+        # 회원 정보 표시 (추가된 부분)
+        st.header("👤 회원 정보")
+        info_cols = st.columns([1,1,1,1])
+        info_cols[0].metric("고객명", data['name'])
+        info_cols[1].metric("사원번호", data['emp_num'])
+        info_cols[2].metric("계좌번호", data['account'])
+        info_cols[3].metric("만기예정일", maturity_date.strftime('%Y-%m-%d'))
         
         # 구좌 조정 기능
         with st.expander("🔧 납입 조정", expanded=True):
@@ -111,9 +109,9 @@ def main():
         # 추가 회차 생성
         full_schedule = base_schedule + data['extra_payments']
         
-        # 입금 내역 생성
-        for idx, amount in enumerate(full_schedule):
-            deposit_date = data['start_date'] + relativedelta(months=idx)
+        # 입금 내역 생성 (수정된 부분)
+        for idx, amount in enumerate(full_schedule, start=1):
+            deposit_date = data['start_date'] + relativedelta(months=idx-1)
             current_balance += amount
             monthly_interest = current_balance * (data['interest']/100)/12
             
@@ -122,16 +120,16 @@ def main():
             
             # 조정 사항 표시
             for adj in data['adjustments']:
-                if adj["month"] == idx+1:
-                    note = f"🔻 조적적용 ({adj['adjusted_amount']}¥)"
-                elif idx+1 > len(base_schedule):
+                if adj["month"] == idx:
+                    note = f"🔻 조정적용 ({adj['adjusted_amount']}¥)"
+                elif idx > len(base_schedule):
                     note = "➕ 추가 회차"
 
             deposit_data.append([
-                f"{idx+1}회차 ({deposit_date.strftime('%y.%m.%d')}",
+                f"{idx}회차 ({deposit_date.strftime('%y.%m.%d')})",  # 괄호 추가 수정
                 f"¥{amount:,}",
                 f"¥{current_balance:,}",
-                f"¥{monthly_interest:,.1f}",
+                monthly_interest,  # 숫자로 저장 (이자 계산용)
                 status,
                 note
             ])
@@ -141,19 +139,20 @@ def main():
             "회차", "입금액", "잔액", "예상이자", "상태", "비고"
         ]).set_index("회차")
         
-        st.dataframe(df, use_container_width=True, height=600)
+        # 표시용 테이블 (이자 포맷팅)
+        display_df = df.copy()
+        display_df["예상이자"] = display_df["예상이자"].apply(lambda x: f"¥{x:,.1f}")
         
-        # 통계 정보
+        st.dataframe(display_df, use_container_width=True, height=600)
+        
+        # 통계 정보 (수정된 부분)
         total_payment = sum(full_schedule)
-        total_interest = sum(row[3] for row in deposit_data)
-        st.metric("💰 총 납입액", f"¥{total_payment:,}")
-        st.metric("💹 예상 총 이자", f"¥{total_interest:,.1f}")
+        total_interest = sum(row[3] for row in deposit_data)  # 숫자 값 합계
         
-        # 액션 버튼
-        btn_cols = st.columns([1,1,1,5])
-        btn_cols[0].button("🚫 해지하기", use_container_width=True)
-        btn_cols[1].button("🔄 구좌 변경", use_container_width=True)
-        btn_cols[2].button("💸 분할납부", use_container_width=True)
+        st.divider()
+        col1, col2 = st.columns(2)
+        col1.metric("💰 총 납입액", f"¥{total_payment:,}")
+        col2.metric("💹 예상 총 이자", f"¥{total_interest:,.1f}")
 
 # 앱 실행
 if 'logged_in' not in st.session_state:
