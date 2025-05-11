@@ -1,9 +1,7 @@
 import streamlit as st
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
-from urllib.parse import urlparse, parse_qs
 import pandas as pd
-import streamlit.components.v1 as components
 
 # CSS 스타일링
 st.markdown("""
@@ -21,30 +19,6 @@ st.markdown("""
 .stApp {
     background: var(--background);
     font-family: 'Roboto', sans-serif;
-}
-
-/* 네비게이션 바 */
-.nav-container {
-    background: var(--surface);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    padding: 12px 24px;
-    margin: -1rem -1rem 2rem;
-    display: flex;
-    gap: 32px;
-}
-
-.nav-item {
-    color: var(--on-surface);
-    font-weight: 500;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.nav-item.active {
-    background: rgba(26, 115, 232, 0.1);
-    color: var(--primary);
 }
 
 /* 대시보드 스타일 */
@@ -133,6 +107,16 @@ st.markdown("""
     color: var(--primary);
 }
 
+.nav-button {
+    width: 100%;
+    margin: 0.2rem 0;
+    transition: all 0.3s;
+}
+
+.nav-button:hover {
+    transform: translateY(-2px);
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 </style>
 """, unsafe_allow_html=True)
@@ -151,23 +135,6 @@ USER_DATA = {
     "emp_num": "12345678",
     "department": "IT事業部"
 }
-
-# 앱 실행 로직 수정
-def main():
-    params = st.experimental_get_query_params()
-    current_page = params.get("page", ["home"])[0]
-
-    if not st.session_state.logged_in:
-        login()
-    else:
-        render_nav()
-        
-        if current_page == 'home':
-            render_dashboard()
-        elif current_page == 'loan':
-            loan_management()
-        elif current_page == 'payroll':
-            show_payroll()
 
 # 적금 계산 함수
 def calculate_savings(data):
@@ -229,29 +196,37 @@ def login():
                 if st.form_submit_button("ログイン"):
                     if user_id == "sgms" and password == "qwer1234":
                         st.session_state.logged_in = True
-                        st.session_state.page = "home"
+                        st.query_params.page = "home"
                         st.rerun()
                     else:
                         st.error("認証に失敗しました")
 
 # 네비게이션 바
 def render_nav():
-    params = st.experimental_get_query_params()
-    current_page = params.get("page", ["home"])[0]
+    current_page = st.query_params.get("page", "home")
     
-    cols = st.columns([3,1,1,1,3])
-    with cols[1]:
-        if st.button("🏠 ホーム", use_container_width=True, 
-                    type="primary" if current_page == "home" else "secondary"):
-            st.experimental_set_query_params(page="home")
-    with cols[2]:
-        if st.button("💰 ローン管理", use_container_width=True,
-                    type="primary" if current_page == "loan" else "secondary"):
-            st.experimental_set_query_params(page="loan")
-    with cols[3]:
-        if st.button("📄 給与明細", use_container_width=True,
-                    type="primary" if current_page == "payroll" else "secondary"):
-            st.experimental_set_query_params(page="payroll")
+    col1, col2, col3, col4 = st.columns([1,1,1,5])
+    with col1:
+        if st.button("🏠 ホーム", key="nav_home", 
+                    type="primary" if current_page == "home" else "secondary",
+                    use_container_width=True, 
+                    help="メインダッシュボードに移動"):
+            st.query_params.page = "home"
+            st.rerun()
+    with col2:
+        if st.button("💰 ローン管理", key="nav_loan",
+                    type="primary" if current_page == "loan" else "secondary",
+                    use_container_width=True,
+                    help="積立貯蓄管理システムに移動"):
+            st.query_params.page = "loan"
+            st.rerun()
+    with col3:
+        if st.button("📄 給与明細", key="nav_payroll",
+                    type="primary" if current_page == "payroll" else "secondary",
+                    use_container_width=True,
+                    help="給与明細書を表示"):
+            st.query_params.page = "payroll"
+            st.rerun()
     
     st.markdown("---")
 
@@ -522,22 +497,16 @@ def loan_management():
 # 앱 실행
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
-if 'page' not in st.session_state:
-    st.session_state.page = 'home'
 
 if not st.session_state.logged_in:
     login()
 else:
     render_nav()
     
-    if st.session_state.page == 'home':
+    current_page = st.query_params.get("page", "home")
+    if current_page == 'home':
         render_dashboard()
-    elif st.session_state.page == 'loan':
+    elif current_page == 'loan':
         loan_management()
-    elif st.session_state.page == 'payroll':
+    elif current_page == 'payroll':
         show_payroll()
-
-nav_event = st.session_state.get('component_123')
-if nav_event:
-    st.session_state.page = nav_event
-    st.rerun()
