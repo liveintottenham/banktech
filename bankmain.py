@@ -200,20 +200,22 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 사용자 데이터
-USER_DATA = {
-    "name": "山田 太郎",
-    "assets": {
-        "total": 15480230,
-        "deposits": 12045000,
-        "loans": 2560000,
-        "investments": 875230,
-        "savings": 3500000
-    },
-    "account": "098-96586-6521",
-    "emp_num": "12345678",
-    "department": "IT事業部"
-}
+# 사용자 데이터 및 초기 설정
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+    st.session_state.payslip_data = {
+        "income_items": [
+            {"name": "基本給", "amount": 340000}
+        ],
+        "deduction_items": [
+            {"name": "所得税", "amount": 26320},
+            {"name": "住民税", "amount": 6520},
+            {"name": "健康保険", "amount": 8910},
+            {"name": "厚生年金", "amount": 29960},
+            {"name": "雇用保険", "amount": 4550},
+            {"name": "その他控除", "amount": 70000}
+        ]
+    }
 
 # 급여명세서 데이터 구조
 DEFAULT_PAYSLIP = {
@@ -258,17 +260,21 @@ def login():
 def render_nav():
     current_page = st.query_params.get("page", "home")
     
-    st.markdown("""
-    <div class="nav-container">
-        <div class="nav-item %s" onclick="window.streamlitApi.setComponentValue('home')">ホーム</div>
-        <div class="nav-item %s" onclick="window.streamlitApi.setComponentValue('loan')">ローン管理</div>
-        <div class="nav-item %s" onclick="window.streamlitApi.setComponentValue('payroll')">給与明細</div>
-    </div>
-    """ % (
-        "active" if current_page == "home" else "",
-        "active" if current_page == "loan" else "",
-        "active" if current_page == "payroll" else ""
-    ), unsafe_allow_html=True)
+    cols = st.columns([1,1,1,3])
+    with cols[0]:
+        if st.button("🏠 ホーム", use_container_width=True, 
+                    type="primary" if current_page == "home" else "secondary"):
+            st.query_params.page = "home"
+    with cols[1]:
+        if st.button("💰 ローン管理", use_container_width=True,
+                    type="primary" if current_page == "loan" else "secondary"):
+            st.query_params.page = "loan"
+    with cols[2]:
+        if st.button("📄 給与明細", use_container_width=True,
+                    type="primary" if current_page == "payroll" else "secondary"):
+            st.query_params.page = "payroll"
+    
+    st.markdown("---")
 
 # 자산 현황 대시보드
 def render_dashboard():
@@ -587,10 +593,7 @@ def loan_management():
         }
     )
 
-# 앱 실행
-if 'logged_in' not in st.session_state:
-    st.session_state.logged_in = False
-
+# 앱 실행 로직
 if not st.session_state.logged_in:
     login()
 else:
@@ -603,23 +606,4 @@ else:
         loan_management()
     elif current_page == 'payroll':
         show_payroll()
-
-# JavaScript 핸들러
-components.html("""
-<script>
-window.streamlitApi = {
-    setComponentValue: function(value) {
-        window.parent.postMessage({
-            type: 'streamlit:setComponentValue',
-            api: 'component_123',
-            componentValue: value
-        }, '*');
-    }
-}
-</script>
-""", height=0)
-
-nav_event = st.session_state.get('component_123')
-if nav_event:
-    st.query_params.page = nav_event
-    st.rerun()
+        
