@@ -1,6 +1,7 @@
 import streamlit as st
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
+from urllib.parse import urlparse, parse_qs
 import pandas as pd
 import streamlit.components.v1 as components
 
@@ -151,6 +152,23 @@ USER_DATA = {
     "department": "IT事業部"
 }
 
+# 앱 실행 로직 수정
+def main():
+    params = st.experimental_get_query_params()
+    current_page = params.get("page", ["home"])[0]
+
+    if not st.session_state.logged_in:
+        login()
+    else:
+        render_nav()
+        
+        if current_page == 'home':
+            render_dashboard()
+        elif current_page == 'loan':
+            loan_management()
+        elif current_page == 'payroll':
+            show_payroll()
+
 # 적금 계산 함수
 def calculate_savings(data):
     original_monthly = data['unit_price'] * data['original_units']
@@ -218,16 +236,24 @@ def login():
 
 # 네비게이션 바
 def render_nav():
-    st.markdown(f"""
-    <div class="nav-container">
-        <div class="nav-item {'active' if st.session_state.page == 'home' else ''}" 
-            onclick="window.streamlitApi.setComponentValue('home')">ホーム</div>
-        <div class="nav-item {'active' if st.session_state.page == 'loan' else ''}" 
-            onclick="window.streamlitApi.setComponentValue('loan')">ローン管理</div>
-        <div class="nav-item {'active' if st.session_state.page == 'payroll' else ''}" 
-            onclick="window.streamlitApi.setComponentValue('payroll')">給与明細</div>
-    </div>
-    """, unsafe_allow_html=True)
+    params = st.experimental_get_query_params()
+    current_page = params.get("page", ["home"])[0]
+    
+    cols = st.columns([3,1,1,1,3])
+    with cols[1]:
+        if st.button("🏠 ホーム", use_container_width=True, 
+                    type="primary" if current_page == "home" else "secondary"):
+            st.experimental_set_query_params(page="home")
+    with cols[2]:
+        if st.button("💰 ローン管理", use_container_width=True,
+                    type="primary" if current_page == "loan" else "secondary"):
+            st.experimental_set_query_params(page="loan")
+    with cols[3]:
+        if st.button("📄 給与明細", use_container_width=True,
+                    type="primary" if current_page == "payroll" else "secondary"):
+            st.experimental_set_query_params(page="payroll")
+    
+    st.markdown("---")
 
 # 자산 현황 대시보드
 def render_dashboard():
@@ -510,24 +536,6 @@ else:
         loan_management()
     elif st.session_state.page == 'payroll':
         show_payroll()
-
-# 네비게이션 핸들링
-components.html(
-    """
-    <script>
-    window.streamlitApi = {
-        setComponentValue: function(value) {
-            window.parent.postMessage({
-                type: 'streamlit:setComponentValue',
-                api: 'component_123',
-                componentValue: value
-            }, '*');
-        }
-    }
-    </script>
-    """, 
-    height=0
-)
 
 nav_event = st.session_state.get('component_123')
 if nav_event:
