@@ -3,7 +3,7 @@ from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 import pandas as pd
 
-# CSS 스타일링 (은행 사이트처럼 디자인)
+# CSS 스타일링
 st.markdown("""
 <style>
 :root {
@@ -201,8 +201,22 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 사용자 데이터 및 초기 설정
-if 'logged_in' not in st.session_state:
-    st.session_state.logged_in = False
+if 'user_data' not in st.session_state:
+    st.session_state.user_data = {
+        "name": "山田 太郎",
+        "assets": {
+            "total": 15480230,
+            "deposits": 12045000,
+            "loans": 2560000,
+            "investments": 875230,
+            "savings": 3500000
+        },
+        "account": "098-96586-6521",
+        "emp_num": "12345678",
+        "department": "IT事業部"
+    }
+
+if 'payslip_data' not in st.session_state:
     st.session_state.payslip_data = {
         "income_items": [
             {"name": "基本給", "amount": 340000}
@@ -244,14 +258,13 @@ def login():
     with st.form("login_form"):
         col1, col2, col3 = st.columns([1,2,1])
         with col2:
-            st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
-            user_id = st.text_input("ログインID", key="login_id")
-            password = st.text_input("パスワード", type="password", key="login_pw")
+            user_id = st.text_input("ログインID")
+            password = st.text_input("パスワード", type="password")
+            
+            # 제출 버튼 추가
             if st.form_submit_button("ログイン", use_container_width=True):
                 if user_id == "otsuka" and password == "bank1234":
                     st.session_state.logged_in = True
-                    st.session_state.payslip_data = DEFAULT_PAYSLIP.copy()
-                    st.query_params.page = "home"
                     st.rerun()
                 else:
                     st.error("ログインIDまたはパスワードが正しくありません")
@@ -262,19 +275,26 @@ def render_nav():
     
     cols = st.columns([1,1,1,3])
     with cols[0]:
-        if st.button("🏠 ホーム", use_container_width=True, 
+        if st.button("🏠 ホーム", 
+                    use_container_width=True,
                     type="primary" if current_page == "home" else "secondary"):
             st.query_params.page = "home"
+            st.rerun()
     with cols[1]:
-        if st.button("💰 ローン管理", use_container_width=True,
+        if st.button("💰 ローン管理", 
+                    use_container_width=True,
                     type="primary" if current_page == "loan" else "secondary"):
             st.query_params.page = "loan"
+            st.rerun()
     with cols[2]:
-        if st.button("📄 給与明細", use_container_width=True,
+        if st.button("📄 給与明細", 
+                    use_container_width=True,
                     type="primary" if current_page == "payroll" else "secondary"):
             st.query_params.page = "payroll"
+            st.rerun()
     
     st.markdown("---")
+
 
 # 자산 현황 대시보드
 def render_dashboard():
@@ -282,12 +302,12 @@ def render_dashboard():
     <div class="dashboard-header">
         <div style="display:flex; align-items:center; gap:1.5rem">
             <div>
-                <h2 style="margin:0">ようこそ、{USER_DATA['name']}様</h2>
-                <p style="color:#666">{USER_DATA['department']} | 最終ログイン: {datetime.now().strftime('%Y/%m/%d %H:%M')}</p>
+                <h2 style="margin:0">ようこそ、{st.session_state.user_data['name']}様</h2>
+                <p style="color:#666">{st.session_state.user_data['department']} | 最終ログイン: {datetime.now().strftime('%Y/%m/%d %H:%M')}</p>
             </div>
             <div style="margin-left:auto; text-align:right">
                 <p style="margin:0; color:#666">口座番号</p>
-                <h3 style="margin:0">{USER_DATA['account']}</h3>
+                <h3 style="margin:0">{st.session_state.user_data['account']}</h3>
             </div>
         </div>
     </div>
@@ -335,75 +355,63 @@ def render_dashboard():
 
 # 급여 명세서 생성 및 표시
 def show_payroll():
-    if 'payslip_data' not in st.session_state:
-        st.session_state.payslip_data = DEFAULT_PAYSLIP.copy()
-    
-    st.markdown("""
-    <div style="margin-bottom:1.5rem">
-        <h2>給与明細作成</h2>
-        <p style="color:#666">毎月の給与明細を作成・確認できます</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    with st.expander("📝 給与明細作成", expanded=True):
-        with st.form("payslip_form"):
-            st.markdown("#### 支給内訳")
-            income_cols = st.columns([3, 2, 1])
-            income_items = []
-            
-            # 기본 지급액
-            income_items.append({
-                "name": income_cols[0].text_input("項目名", value="基本給", key="basic_salary_name"),
-                "amount": income_cols[1].number_input("金額 (¥)", value=340000, key="basic_salary_amount")
-            })
-            
-            # 추가 지급항목
-            for i in range(3):
-                with st.container():
-                    cols = st.columns([3, 2, 1])
-                    name = cols[0].text_input(f"追加項目名 {i+1}", key=f"extra_income_name_{i}")
-                    amount = cols[1].number_input(f"金額 {i+1} (¥)", value=0, key=f"extra_income_amount_{i}")
-                    if name and amount > 0:
-                        income_items.append({"name": name, "amount": amount})
-            
-            st.markdown("---")
-            st.markdown("#### 控除内訳")
-            
-            # 기본 공제항목
-            deduction_items = []
-            default_deductions = [
-                {"name": "所得税", "amount": 26320},
-                {"name": "住民税", "amount": 6520},
-                {"name": "健康保険", "amount": 8910},
-                {"name": "厚生年金", "amount": 29960},
-                {"name": "雇用保険", "amount": 4550}
-            ]
-            
-            for i, item in enumerate(default_deductions):
-                cols = st.columns([3, 2])
-                item["amount"] = cols[1].number_input(
-                    item["name"], 
-                    value=item["amount"], 
-                    key=f"deduction_{i}"
-                )
-                deduction_items.append(item)
-            
-            # 추가 공제항목
-            with st.container():
-                cols = st.columns([3, 2, 1])
-                name = cols[0].text_input("その他控除名", value="その他控除")
-                amount = cols[1].number_input("金額 (¥)", value=70000)
-                if name and amount > 0:
-                    deduction_items.append({"name": name, "amount": amount})
-            
-            if st.form_submit_button("給与明細作成", use_container_width=True):
-                st.session_state.payslip_data = {
-                    "income_items": income_items,
-                    "deduction_items": deduction_items
-                }
-                st.success("給与明細が作成されました")
-                st.query_params.page = "payroll"
-                st.rerun()
+    with st.form("payslip_form"):
+        st.markdown("#### 支給内訳")
+        
+        # 기본 지급액
+        income_items = []
+        income_cols = st.columns([3, 2])
+        income_items.append({
+            "name": income_cols[0].text_input("基本給", value="基本給"),
+            "amount": income_cols[1].number_input("金額 (¥)", value=340000)
+        })
+
+        # 추가 지급항목
+        for i in range(3):
+            cols = st.columns([3, 2])
+            name = cols[0].text_input(f"追加項目 {i+1}", key=f"extra_income_{i}")
+            amount = cols[1].number_input(f"金額 {i+1}", value=0, key=f"extra_amt_{i}")
+            if name and amount > 0:
+                income_items.append({"name": name, "amount": amount})
+
+        st.markdown("---")
+        st.markdown("#### 控除内訳")
+
+        # 기본 공제항목
+        deduction_items = []
+        default_deductions = [
+            {"name": "所得税", "amount": 26320},
+            {"name": "住民税", "amount": 6520},
+            {"name": "健康保険", "amount": 8910},
+            {"name": "厚生年金", "amount": 29960},
+            {"name": "雇用保険", "amount": 4550}
+        ]
+
+        for i, item in enumerate(default_deductions):
+            cols = st.columns([3, 2])
+            item["amount"] = cols[1].number_input(
+                item["name"], 
+                value=item["amount"], 
+                key=f"ded_{i}"
+            )
+            deduction_items.append(item)
+
+        # 추가 공제항목
+        cols = st.columns([3, 2])
+        other_deduction = {
+            "name": cols[0].text_input("その他控除名", value="その他控除"),
+            "amount": cols[1].number_input("金額", value=70000)
+        }
+        deduction_items.append(other_deduction)
+
+        # 제출 버튼 추가
+        if st.form_submit_button("明細作成", use_container_width=True):
+            st.session_state.payslip_data = {
+                "income_items": income_items,
+                "deduction_items": deduction_items
+            }
+            st.rerun()
+
     
     # 생성된 급여명세서 표시
     if st.session_state.payslip_data:
@@ -594,6 +602,9 @@ def loan_management():
     )
 
 # 앱 실행 로직
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+
 if not st.session_state.logged_in:
     login()
 else:
@@ -603,7 +614,6 @@ else:
     if current_page == 'home':
         render_dashboard()
     elif current_page == 'loan':
-        loan_management()
+        loan_management()  
     elif current_page == 'payroll':
         show_payroll()
-        
