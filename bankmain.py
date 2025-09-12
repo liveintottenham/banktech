@@ -187,7 +187,7 @@ st.markdown("""
 }
 
 /* 입력 폼 스타일 */
-.stTextInput>div>div>input, 
+.stTextInput>div>div>input,
 .stNumberInput>div>div>input,
 .stDateInput>div>div>input,
 .stSelectbox>div>div>select {
@@ -230,6 +230,11 @@ if 'payslip_data' not in st.session_state:
             {"name": "その他控除", "amount": 70000}
         ]
     }
+
+# ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+# 수정된 부분: st.session_state.user_data를 USER_DATA 변수에 할당
+USER_DATA = st.session_state.user_data
+# ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 # 급여명세서 데이터 구조
 DEFAULT_PAYSLIP = {
@@ -275,21 +280,21 @@ def render_nav():
     
     cols = st.columns([1,1,1,3])
     with cols[0]:
-        if st.button("🏠 ホーム", 
-                    use_container_width=True,
-                    type="primary" if current_page == "home" else "secondary"):
+        if st.button("🏠 ホーム",
+                     use_container_width=True,
+                     type="primary" if current_page == "home" else "secondary"):
             st.query_params.page = "home"
             st.rerun()
     with cols[1]:
-        if st.button("💰 ローン管理", 
-                    use_container_width=True,
-                    type="primary" if current_page == "loan" else "secondary"):
+        if st.button("💰 ローン管理",
+                     use_container_width=True,
+                     type="primary" if current_page == "loan" else "secondary"):
             st.query_params.page = "loan"
             st.rerun()
     with cols[2]:
-        if st.button("📄 給与明細", 
-                    use_container_width=True,
-                    type="primary" if current_page == "payroll" else "secondary"):
+        if st.button("📄 給与明細",
+                     use_container_width=True,
+                     type="primary" if current_page == "payroll" else "secondary"):
             st.query_params.page = "payroll"
             st.rerun()
     
@@ -390,8 +395,8 @@ def show_payroll():
         for i, item in enumerate(default_deductions):
             cols = st.columns([3, 2])
             item["amount"] = cols[1].number_input(
-                item["name"], 
-                value=item["amount"], 
+                item["name"],
+                value=item["amount"],
                 key=f"ded_{i}"
             )
             deduction_items.append(item)
@@ -473,6 +478,52 @@ def show_payroll():
 
 # 적금 관리 시스템
 def loan_management():
+    # 적금 계산 로직이 없으므로 임시 함수를 추가합니다.
+    def calculate_savings(data):
+        total_months = data['years'] * 12
+        maturity_date = (data['start_date'] + relativedelta(years=data['years'])).strftime('%Y/%m/%d')
+        monthly_payment = data['unit_price'] * data['current_units']
+        total_payment = monthly_payment * total_months
+        
+        # 간단한 이자 계산 (실제 금융 계산은 더 복잡합니다)
+        total_interest = total_payment * (data['interest'] / 100 / 2) * data['years']
+        
+        records = []
+        balance = 0
+        for i in range(1, total_months + 1):
+            payment_date = (data['start_date'] + relativedelta(months=i-1)).strftime('%Y/%m/%d')
+            
+            # 조정사항 확인
+            current_payment = monthly_payment
+            note = ""
+            for adj in data.get('adjustments', []):
+                if adj['month'] == i:
+                    current_payment = data['unit_price'] * adj['new_units']
+                    note = f"口座数変更: {adj['new_units']}"
+                    break
+            
+            balance += current_payment
+            interest_for_month = balance * (data['interest'] / 100 / 12)
+            records.append([
+                i,
+                payment_date,
+                current_payment,
+                balance,
+                interest_for_month,
+                "予定" if date.today() < (data['start_date'] + relativedelta(months=i-1)) else "完了",
+                note
+            ])
+            
+        return {
+            "total_months": total_months,
+            "maturity_date": maturity_date,
+            "monthly": monthly_payment,
+            "total_payment": sum(r[2] for r in records), # 조정된 금액으로 총액 계산
+            "total_interest": sum(r[4] for r in records),
+            "interest_rate": data['interest'],
+            "records": records
+        }
+
     st.markdown("""
     <div style="margin-bottom:2rem">
         <h2>積立貯蓄管理システム</h2>
@@ -527,9 +578,9 @@ def loan_management():
         with st.form("adjust_form"):
             cols = st.columns([2,3,1])
             adjust_month = cols[0].number_input("調整対象回", min_value=1, max_value=calc['total_months'], value=1)
-            new_units = cols[1].number_input("新規口座数", 
-                min_value=1, 
-                max_value=data['original_units']*2, 
+            new_units = cols[1].number_input("新規口座数",
+                min_value=1,
+                max_value=data['original_units']*2,
                 value=data['original_units']//2)
             if cols[2].form_submit_button("適用"):
                 data['adjustments'].append({
@@ -540,11 +591,11 @@ def loan_management():
                 st.rerun()
     
     # 3. 고객 정보
-    st.markdown("### 🧑💼 基本情報")
+    st.markdown("### 🧑‍💼 基本情報")
     cols = st.columns(4)
     info_items = [
         ("顧客名", data['name'], "👤"),
-        ("社員番号", data['emp_num'], "🆔"), 
+        ("社員番号", data['emp_num'], "🆔"),
         ("口座番号", data['account'], "💳"),
         ("満期日", calc['maturity_date'], "📅")
     ]
@@ -614,6 +665,6 @@ else:
     if current_page == 'home':
         render_dashboard()
     elif current_page == 'loan':
-        loan_management()  
+        loan_management()
     elif current_page == 'payroll':
         show_payroll()
