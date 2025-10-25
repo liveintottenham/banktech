@@ -17,28 +17,87 @@ def initialize_session_state():
     if 'logged_in' not in st.session_state:
         st.session_state.logged_in = False
     if 'language' not in st.session_state:
-        st.session_state.language = 'JP'
+        st.session_state.language = 'EN'
     if 'current_page' not in st.session_state:
         st.session_state.current_page = 'home'
     
     # 사용자 데이터
     if 'user_data' not in st.session_state:
         st.session_state.user_data = {
-            "name": "山田 太郎",
+            "name": "Yamada Taro",
             "account": "098-96586-6521",
             "emp_num": "12345678",
-            "department": "IT事業部"
+            "department": "IT Department"
         }
     
     # 적금 데이터 저장소
     if 'savings_list' not in st.session_state:
         st.session_state.savings_list = []
+    
+    # 급여 데이터 저장소
+    if 'payroll_list' not in st.session_state:
+        st.session_state.payroll_list = []
 
 # 다국어 지원
 LANGUAGES = {
+    'EN': {
+        'title': 'Otsuka Bank Employee Portal',
+        'subtitle': 'Secure Banking Management System',
+        'login_id': 'Login ID',
+        'password': 'Password',
+        'login': 'Login',
+        'login_error': 'Incorrect Login ID or Password',
+        'home': '🏠 Home',
+        'savings': '💰 Savings Management',
+        'payroll': '📄 Payroll',
+        'welcome': 'Welcome, {}',
+        'account_number': 'Account Number',
+        'asset_overview': 'Asset Overview',
+        'total_savings': 'Total Savings',
+        'active_plans': 'Active Plans',
+        'monthly_payment': 'Monthly Payment',
+        'recent_transactions': 'Recent Transactions',
+        'quick_access': 'Quick Access',
+        'new_savings': 'New Savings Plan',
+        'view_savings': 'View Savings',
+        'savings_management': 'Savings Management',
+        'savings_name': 'Savings Name',
+        'monthly_amount': 'Monthly Amount',
+        'period': 'Savings Period',
+        'start_date': 'Start Date',
+        'interest_rate': 'Annual Interest Rate',
+        'create_plan': 'Create Plan',
+        'savings_details': 'Savings Details',
+        'payment_schedule': 'Payment Schedule',
+        'logout': 'Logout',
+        'customer_name': 'Customer Name',
+        'employee_number': 'Employee Number',
+        'basic_info': 'Basic Information',
+        'savings_calc': 'Savings Calculator',
+        'adjust_payment': 'Payment Adjustment',
+        'payment_history': 'Payment History',
+        'basic_salary': 'Basic Salary',
+        'overtime_pay': 'Overtime Pay',
+        'bonus': 'Bonus',
+        'allowances': 'Allowances',
+        'insurance': 'Insurance',
+        'tax': 'Tax',
+        'other_deductions': 'Other Deductions',
+        'net_salary': 'Net Salary',
+        'generate_payslip': 'Generate Payslip',
+        'payslip_date': 'Payslip Date',
+        'income_items': 'Income Items',
+        'deduction_items': 'Deduction Items',
+        'total_income': 'Total Income',
+        'total_deduction': 'Total Deduction',
+        'add_adjustment': 'Add Adjustment',
+        'adjustment_month': 'Adjustment Month',
+        'adjustment_amount': 'Adjustment Amount',
+        'remove': 'Remove'
+    },
     'JP': {
         'title': '大塚銀行 従業員ポータル',
-        'subtitle': 'Otsuka Bank Employee Portal',
+        'subtitle': 'セキュアバンキング管理システム',
         'login_id': 'ログインID',
         'password': 'パスワード',
         'login': 'ログイン',
@@ -61,6 +120,7 @@ LANGUAGES = {
         'monthly_amount': '月間積立額',
         'period': '積立期間',
         'start_date': '開始日',
+        'interest_rate': '年利率',
         'create_plan': 'プラン作成',
         'savings_details': '積立詳細',
         'payment_schedule': '入金スケジュール',
@@ -70,11 +130,29 @@ LANGUAGES = {
         'basic_info': '基本情報',
         'savings_calc': '積立計算',
         'adjust_payment': '入金調整',
-        'payment_history': '入金履歴'
+        'payment_history': '入金履歴',
+        'basic_salary': '基本給',
+        'overtime_pay': '時間外手当',
+        'bonus': 'ボーナス',
+        'allowances': 'その他手当',
+        'insurance': '社会保険料',
+        'tax': '税金',
+        'other_deductions': 'その他控除',
+        'net_salary': '差引支給額',
+        'generate_payslip': '明細発行',
+        'payslip_date': '給与日',
+        'income_items': '支給内訳',
+        'deduction_items': '控除内訳',
+        'total_income': '総支給額',
+        'total_deduction': '総控除額',
+        'add_adjustment': '調整追加',
+        'adjustment_month': '調整回',
+        'adjustment_amount': '調整金額',
+        'remove': '削除'
     },
     'KR': {
         'title': '오츠카 은행 직원 포털',
-        'subtitle': 'Otsuka Bank Employee Portal',
+        'subtitle': '보안 뱅킹 관리 시스템',
         'login_id': '로그인 ID',
         'password': '비밀번호',
         'login': '로그인',
@@ -97,6 +175,7 @@ LANGUAGES = {
         'monthly_amount': '월 납입액',
         'period': '적금 기간',
         'start_date': '시작일',
+        'interest_rate': '연이율',
         'create_plan': '플랜 생성',
         'savings_details': '적금 상세',
         'payment_schedule': '납입 일정',
@@ -106,7 +185,25 @@ LANGUAGES = {
         'basic_info': '기본 정보',
         'savings_calc': '적금 계산',
         'adjust_payment': '납입 조정',
-        'payment_history': '납입 내역'
+        'payment_history': '납입 내역',
+        'basic_salary': '기본급',
+        'overtime_pay': '초과근무수당',
+        'bonus': '상여금',
+        'allowances': '기타 수당',
+        'insurance': '사회보험료',
+        'tax': '세금',
+        'other_deductions': '기타 공제',
+        'net_salary': '실 수령액',
+        'generate_payslip': '명세서 생성',
+        'payslip_date': '급여일',
+        'income_items': '지급 내역',
+        'deduction_items': '공제 내역',
+        'total_income': '총 지급액',
+        'total_deduction': '총 공제액',
+        'add_adjustment': '조정 추가',
+        'adjustment_month': '조정 회차',
+        'adjustment_amount': '조정 금액',
+        'remove': '삭제'
     }
 }
 
@@ -118,43 +215,42 @@ def load_css():
     css = """
     <style>
     /* 기본 스타일 */
-    .main {
+    .stApp {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        padding: 20px;
+        font-family: 'Noto Sans JP', 'Malgun Gothic', sans-serif;
     }
     
     .main-container {
         background: white;
-        border-radius: 20px;
-        min-height: calc(100vh - 40px);
+        border-radius: 15px;
+        margin: 20px;
+        padding: 0px;
         box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        min-height: calc(100vh - 40px);
         overflow: hidden;
     }
     
-    .content-container {
+    .content-area {
         padding: 30px;
     }
     
     /* 헤더 스타일 */
     .bank-header {
-        background: linear-gradient(135deg, #2c3e50, #34495e);
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
         color: white;
         padding: 2rem 3rem;
         box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     }
     
     .bank-title {
-        font-size: 2.5rem !important;
-        font-weight: 800 !important;
+        font-size: 2.2rem !important;
+        font-weight: 700 !important;
         margin-bottom: 0.5rem !important;
-        background: linear-gradient(135deg, #fff, #f0f0f0);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: white !important;
     }
     
     .bank-subtitle {
-        font-size: 1.2rem !important;
+        font-size: 1.1rem !important;
         opacity: 0.9;
         font-weight: 300;
     }
@@ -163,76 +259,82 @@ def load_css():
     .nav-container {
         background: #f8f9fa;
         padding: 1rem 2rem;
-        border-bottom: 1px solid #e9ecef;
+        border-bottom: 1px solid #dee2e6;
     }
     
     /* 카드 스타일 */
     .card {
         background: white;
-        border-radius: 15px;
+        border-radius: 12px;
         padding: 1.5rem;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         border: 1px solid #e9ecef;
         margin-bottom: 1.5rem;
     }
     
     .metric-card {
-        background: linear-gradient(135deg, #667eea, #764ba2);
+        background: linear-gradient(135deg, #2c3e50, #3498db);
         color: white;
-        border-radius: 15px;
+        border-radius: 12px;
         padding: 1.5rem;
         text-align: center;
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        box-shadow: 0 6px 20px rgba(44, 62, 80, 0.3);
     }
     
     /* 버튼 스타일 */
     .stButton>button {
-        background: linear-gradient(135deg, #667eea, #764ba2) !important;
+        background: linear-gradient(135deg, #2c3e50, #3498db) !important;
         color: white !important;
         border: none !important;
-        border-radius: 10px !important;
-        padding: 0.8rem 1.5rem !important;
-        font-weight: 600 !important;
+        border-radius: 8px !important;
+        padding: 0.7rem 1.2rem !important;
+        font-weight: 500 !important;
         transition: all 0.3s ease !important;
     }
     
     .stButton>button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(44, 62, 80, 0.4) !important;
     }
     
     /* 입력 필드 */
     .stTextInput>div>div>input,
     .stNumberInput>div>div>input,
-    .stDateInput>div>div>input {
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        padding: 0.8rem 1rem !important;
+    .stDateInput>div>div>input,
+    .stSelectbox>div>div>select {
+        border: 1px solid #ced4da !important;
+        border-radius: 8px !important;
+        padding: 0.7rem 1rem !important;
     }
     
     /* 테이블 스타일 */
     .dataframe {
-        border-radius: 10px !important;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
     }
     
     /* 캡처 방지 배너 */
     .no-capture {
-        background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
         color: white;
-        padding: 0.5rem;
+        padding: 0.8rem;
         text-align: center;
         font-weight: bold;
-        position: relative;
-        animation: blink 2s infinite;
+        font-size: 0.9rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
     }
     
-    @keyframes blink {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.7; }
+    /* 조정 아이템 */
+    .adjustment-item {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
     }
     
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
     
     * {
         font-family: 'Noto Sans JP', sans-serif;
@@ -242,17 +344,13 @@ def load_css():
     st.markdown(css, unsafe_allow_html=True)
 
 # 적금 계산 함수 (실제 은행 방식)
-def calculate_savings_schedule(monthly_amount, period_years, start_date, adjustments=None):
-    """
-    실제 은행 적금 계산 방식
-    adjustments: {회차: 조정금액} 형태의 딕셔너리
-    """
+def calculate_savings_schedule(monthly_amount, period_years, interest_rate, start_date, adjustments=None):
     total_months = period_years * 12
+    monthly_interest_rate = interest_rate / 100 / 12
     today = datetime.now().date()
     
     schedule = []
-    total_paid = 0
-    total_adjustments = 0
+    current_balance = 0
     
     for month in range(1, total_months + 1):
         payment_date = start_date + relativedelta(months=month-1)
@@ -262,34 +360,63 @@ def calculate_savings_schedule(monthly_amount, period_years, start_date, adjustm
         adjustment_note = ""
         if adjustments and month in adjustments:
             actual_amount = adjustments[month]
-            adjustment_note = f"조정: ¥{adjustments[month]:,}"
-            total_adjustments += (monthly_amount - adjustments[month])
+            adjustment_note = f"Adjusted: ¥{adjustments[month]:,}"
+        
+        # 이자 계산
+        monthly_interest = current_balance * monthly_interest_rate
+        current_balance += actual_amount + monthly_interest
         
         # 상태 결정 (오늘 기준)
         if payment_date < today:
-            status = "✅ 입금완료"
+            status = "✅ Completed"
         elif payment_date == today:
-            status = "⏳ 오늘입금"
+            status = "⏳ Today"
         else:
-            status = "📅 입금예정"
-        
-        total_paid += actual_amount
+            status = "📅 Scheduled"
         
         schedule.append({
-            '회차': month,
-            '입금일': payment_date.strftime('%Y/%m/%d'),
-            '입금액': actual_amount,
-            '누적액': total_paid,
-            '상태': status,
-            '비고': adjustment_note
+            'Month': month,
+            'Payment Date': payment_date.strftime('%Y/%m/%d'),
+            'Payment Amount': actual_amount,
+            'Interest': monthly_interest,
+            'Total Balance': current_balance,
+            'Status': status,
+            'Note': adjustment_note
         })
+    
+    total_payment = sum(item['Payment Amount'] for item in schedule)
+    total_interest = sum(item['Interest'] for item in schedule)
     
     return {
         'schedule': schedule,
         'total_months': total_months,
-        'total_amount': total_paid,
-        'total_adjustments': total_adjustments,
-        'completion_rate': len([x for x in schedule if x['상태'] == '✅ 입금완료']) / total_months * 100
+        'total_payment': total_payment,
+        'total_interest': total_interest,
+        'final_balance': current_balance,
+        'completion_rate': len([x for x in schedule if 'Completed' in x['Status']]) / total_months * 100
+    }
+
+# 급여 계산 함수
+def calculate_salary(basic_salary, overtime_pay, bonus, allowances, insurance, tax, other_deductions):
+    total_income = basic_salary + overtime_pay + bonus + allowances
+    total_deductions = insurance + tax + other_deductions
+    net_salary = total_income - total_deductions
+    
+    return {
+        'total_income': total_income,
+        'total_deductions': total_deductions,
+        'net_salary': net_salary,
+        'income_breakdown': {
+            'Basic Salary': basic_salary,
+            'Overtime Pay': overtime_pay,
+            'Bonus': bonus,
+            'Allowances': allowances
+        },
+        'deduction_breakdown': {
+            'Insurance': insurance,
+            'Tax': tax,
+            'Other Deductions': other_deductions
+        }
     }
 
 # 네비게이션
@@ -325,14 +452,14 @@ def render_home():
     
     for savings in st.session_state.savings_list:
         calc = savings['calculation']
-        total_savings += calc['total_amount']
+        total_savings += calc['final_balance']
         monthly_payment += savings['monthly_amount']
     
     with col1:
         st.markdown(f"""
         <div class="metric-card">
             <div style="font-size: 0.9rem; opacity: 0.9;">{get_text('total_savings')}</div>
-            <div style="font-size: 2rem; font-weight: 800;">¥{total_savings:,.0f}</div>
+            <div style="font-size: 1.8rem; font-weight: 700;">¥{total_savings:,.0f}</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -340,7 +467,7 @@ def render_home():
         st.markdown(f"""
         <div class="metric-card">
             <div style="font-size: 0.9rem; opacity: 0.9;">{get_text('monthly_payment')}</div>
-            <div style="font-size: 2rem; font-weight: 800;">¥{monthly_payment:,.0f}</div>
+            <div style="font-size: 1.8rem; font-weight: 700;">¥{monthly_payment:,.0f}</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -348,7 +475,7 @@ def render_home():
         st.markdown(f"""
         <div class="metric-card">
             <div style="font-size: 0.9rem; opacity: 0.9;">{get_text('active_plans')}</div>
-            <div style="font-size: 2rem; font-weight: 800;">{active_plans}</div>
+            <div style="font-size: 1.8rem; font-weight: 700;">{active_plans}</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -362,43 +489,24 @@ def render_home():
             st.rerun()
     
     with col2:
-        if st.button(f"📋 {get_text('view_savings')}", use_container_width=True):
-            st.session_state.current_page = 'savings'
+        if st.button(f"📄 {get_text('payroll')}", use_container_width=True):
+            st.session_state.current_page = 'payroll'
             st.rerun()
-    
-    # 최근 적금 플랜
-    if st.session_state.savings_list:
-        st.markdown(f"## {get_text('active_plans')}")
-        for savings in st.session_state.savings_list[-3:]:
-            with st.container():
-                st.markdown('<div class="card">', unsafe_allow_html=True)
-                col1, col2, col3, col4 = st.columns([2,1,1,1])
-                with col1:
-                    st.write(f"**{savings['name']}**")
-                    st.write(f"계좌: {savings['account_number']}")
-                with col2:
-                    st.write(f"월 ¥{savings['monthly_amount']:,.0f}")
-                with col3:
-                    st.write(f"{savings['period']}년")
-                with col4:
-                    completion = savings['calculation']['completion_rate']
-                    st.write(f"진행률: {completion:.1f}%")
-                st.markdown('</div>', unsafe_allow_html=True)
 
 # 적금 관리 페이지
 def render_savings():
     st.markdown(f"## {get_text('savings_management')}")
     
-    tab1, tab2 = st.tabs(["新規積立作成", "積立一覧"])
+    tab1, tab2 = st.tabs(["New Savings Plan", "Savings List"])
     
     with tab1:
-        st.subheader("新規積立口座開設")
+        st.subheader("Create New Savings Plan")
         
         # 캡처 방지 배너
-        st.markdown('<div class="no-capture">⚠️ この画面のスクリーンショット・撮影は禁止されています</div>', unsafe_allow_html=True)
+        st.markdown('<div class="no-capture">⚠️ SCREENSHOT AND PHOTOGRAPHY PROHIBITED</div>', unsafe_allow_html=True)
         
         with st.form("new_savings_plan"):
-            st.markdown("#### 基本情報")
+            st.markdown("#### Basic Information")
             col1, col2 = st.columns(2)
             
             with col1:
@@ -407,26 +515,47 @@ def render_savings():
                 account_number = st.text_input(get_text('account_number'), st.session_state.user_data['account'])
             
             with col2:
-                savings_name = st.text_input(get_text('savings_name'), "定期積立預金")
+                savings_name = st.text_input(get_text('savings_name'), "Regular Savings Plan")
                 monthly_amount = st.number_input(get_text('monthly_amount'), min_value=1000, value=3000, step=1000)
-                period = st.selectbox(get_text('period'), [3, 5], index=0, format_func=lambda x: f"{x}年")
+                period = st.selectbox(get_text('period'), [3, 5], index=0, format_func=lambda x: f"{x} Years")
+                interest_rate = st.number_input(get_text('interest_rate'), min_value=0.1, value=2.5, step=0.1, format="%.1f")
                 start_date = st.date_input(get_text('start_date'), date(2025, 1, 1))
             
-            st.markdown("#### 入金調整設定 (任意)")
-            st.info("特定の回で入金額を調整する場合は設定してください")
+            st.markdown("#### Payment Adjustments")
+            st.info("Set different payment amounts for specific months if needed")
             
-            adjustments = {}
-            adjust_cols = st.columns(4)
-            for i in range(4):
-                with adjust_cols[i]:
-                    month = st.number_input(f"調整回", min_value=1, max_value=period*12, value=(i+1)*3, key=f"adj_month_{i}")
-                    amount = st.number_input(f"調整金額", min_value=0, value=0, key=f"adj_amount_{i}")
-                    if amount > 0:
-                        adjustments[month] = amount
+            # 동적 조정 입력
+            if 'adjustments' not in st.session_state:
+                st.session_state.adjustments = []
+            
+            adjustments_dict = {}
+            
+            for i, adj in enumerate(st.session_state.adjustments):
+                col1, col2, col3 = st.columns([2, 2, 1])
+                with col1:
+                    month = st.number_input(f"Month", min_value=1, max_value=period*12, value=adj['month'], key=f"month_{i}")
+                with col2:
+                    amount = st.number_input(f"Amount", min_value=0, value=adj['amount'], key=f"amount_{i}")
+                with col3:
+                    if st.button(f"🗑️", key=f"remove_{i}"):
+                        st.session_state.adjustments.pop(i)
+                        st.rerun()
+                adjustments_dict[month] = amount
+            
+            # 새 조정 추가
+            col1, col2, col3 = st.columns([2, 2, 1])
+            with col1:
+                new_month = st.number_input("Month", min_value=1, max_value=period*12, value=1, key="new_month")
+            with col2:
+                new_amount = st.number_input("Amount", min_value=0, value=monthly_amount, key="new_amount")
+            with col3:
+                if st.button("➕ Add"):
+                    st.session_state.adjustments.append({'month': new_month, 'amount': new_amount})
+                    st.rerun()
             
             if st.form_submit_button(get_text('create_plan'), use_container_width=True):
                 # 적금 계산
-                calculation = calculate_savings_schedule(monthly_amount, period, start_date, adjustments)
+                calculation = calculate_savings_schedule(monthly_amount, period, interest_rate, start_date, adjustments_dict)
                 
                 # 새로운 적금 플랜 생성
                 new_savings = {
@@ -437,112 +566,158 @@ def render_savings():
                     'account_number': account_number,
                     'monthly_amount': monthly_amount,
                     'period': period,
+                    'interest_rate': interest_rate,
                     'start_date': start_date.strftime('%Y/%m/%d'),
-                    'adjustments': adjustments,
+                    'adjustments': adjustments_dict,
                     'calculation': calculation,
                     'created_at': datetime.now().strftime('%Y/%m/%d %H:%M')
                 }
                 
                 st.session_state.savings_list.append(new_savings)
-                st.success("🎉 積立口座が正常に開設されました！")
+                st.session_state.adjustments = []  # 초기화
+                st.success("🎉 Savings plan created successfully!")
                 st.balloons()
     
     with tab2:
-        st.subheader("積立口座一覧")
+        st.subheader("Savings Plans List")
         
         if not st.session_state.savings_list:
-            st.info("登録されている積立口座がありません。")
+            st.info("No savings plans registered.")
         else:
             for savings in st.session_state.savings_list:
                 with st.expander(f"📒 {savings['name']} - {savings['account_number']}", expanded=False):
                     # 캡처 방지 배너
-                    st.markdown('<div class="no-capture">⚠️ この画面のスクリーンショット・撮影は禁止されています</div>', unsafe_allow_html=True)
+                    st.markdown('<div class="no-capture">⚠️ SCREENSHOT AND PHOTOGRAPHY PROHIBITED</div>', unsafe_allow_html=True)
                     
                     # 기본 정보
-                    st.markdown("#### 基本情報")
+                    st.markdown("#### Basic Information")
                     col1, col2, col3, col4 = st.columns(4)
                     
                     with col1:
-                        st.write("**고객명**")
+                        st.write("**Customer Name**")
                         st.write(savings['customer_name'])
                     with col2:
-                        st.write("**사원번호**")
+                        st.write("**Employee Number**")
                         st.write(savings['employee_number'])
                     with col3:
-                        st.write("**계좌번호**")
+                        st.write("**Account Number**")
                         st.write(savings['account_number'])
                     with col4:
-                        st.write("**개설일**")
+                        st.write("**Start Date**")
                         st.write(savings['start_date'])
                     
                     # 적금 정보
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
-                        st.write("**월 납입액**")
+                        st.write("**Monthly Amount**")
                         st.write(f"¥{savings['monthly_amount']:,.0f}")
                     with col2:
-                        st.write("**적금 기간**")
-                        st.write(f"{savings['period']}년")
+                        st.write("**Period**")
+                        st.write(f"{savings['period']} years")
                     with col3:
-                        st.write("**총 납입액**")
-                        st.write(f"¥{savings['calculation']['total_amount']:,.0f}")
+                        st.write("**Interest Rate**")
+                        st.write(f"{savings['interest_rate']}%")
                     with col4:
                         completion = savings['calculation']['completion_rate']
-                        st.write("**진행률**")
+                        st.write("**Completion Rate**")
                         st.write(f"{completion:.1f}%")
                     
-                    # 조정 내역
-                    if savings['adjustments']:
-                        st.markdown("#### 입금 조정 내역")
-                        for month, amount in savings['adjustments'].items():
-                            st.write(f"- {month}회차: ¥{amount:,.0f} (기본 ¥{savings['monthly_amount']:,.0f} → 조정)")
+                    # 계산 결과
+                    calc = savings['calculation']
+                    st.markdown("#### Calculation Results")
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("Total Payment", f"¥{calc['total_payment']:,.0f}")
+                    with col2:
+                        st.metric("Total Interest", f"¥{calc['total_interest']:,.0f}")
+                    with col3:
+                        st.metric("Final Balance", f"¥{calc['final_balance']:,.0f}")
+                    with col4:
+                        st.metric("Total Months", f"{calc['total_months']}")
                     
                     # 입금 스케줄
-                    st.markdown("#### 입금 스케줄")
+                    st.markdown("#### Payment Schedule")
                     schedule_df = pd.DataFrame(savings['calculation']['schedule'])
-                    
-                    # 현재까지의 입금 내역과 남은 입금 분리
-                    completed_df = schedule_df[schedule_df['상태'] == '✅ 입금완료']
-                    upcoming_df = schedule_df[schedule_df['상태'] != '✅ 입금완료']
-                    
-                    if not completed_df.empty:
-                        st.markdown("##### ✅ 입금완료 내역")
-                        st.dataframe(completed_df, use_container_width=True, hide_index=True)
-                    
-                    if not upcoming_df.empty:
-                        st.markdown("##### 📅 입금예정 내역")
-                        st.dataframe(upcoming_df, use_container_width=True, hide_index=True)
-                    
-                    # 추가 조정 기능
-                    st.markdown("#### 입금 추가 조정")
-                    with st.form(f"adjust_{savings['id']}"):
-                        col1, col2, col3 = st.columns(3)
-                        with col1:
-                            adjust_month = st.number_input("조정 회차", min_value=1, max_value=savings['period']*12, value=1, key=f"new_adj_month_{savings['id']}")
-                        with col2:
-                            adjust_amount = st.number_input("조정 금액", min_value=0, value=savings['monthly_amount'], key=f"new_adj_amount_{savings['id']}")
-                        with col3:
-                            if st.form_submit_button("조정 적용"):
-                                savings['adjustments'][adjust_month] = adjust_amount
-                                # 재계산
-                                savings['calculation'] = calculate_savings_schedule(
-                                    savings['monthly_amount'], 
-                                    savings['period'], 
-                                    datetime.strptime(savings['start_date'], '%Y/%m/%d').date(),
-                                    savings['adjustments']
-                                )
-                                st.success(f"{adjust_month}회차 입금액이 조정되었습니다.")
-                                st.rerun()
+                    st.dataframe(schedule_df, use_container_width=True, hide_index=True)
                     
                     # 삭제 버튼
-                    if st.button(f"🗑️ 삭제", key=f"delete_{savings['id']}"):
+                    if st.button(f"🗑️ Delete", key=f"delete_{savings['id']}"):
                         st.session_state.savings_list = [s for s in st.session_state.savings_list if s['id'] != savings['id']]
                         st.rerun()
 
-# 급여 명세서 페이지 (간단히)
+# 급여 명세서 페이지
 def render_payroll():
-    st.markdown("## 📄 給与明細管理")
-    st.info("この機能は現在開発中です。近日中に利用可能になります。")
+    st.markdown(f"## {get_text('payroll_management')}")
+    
+    with st.form("payroll_form"):
+        st.subheader("Payroll Information")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Income Details")
+            basic_salary = st.number_input(get_text('basic_salary'), value=300000, step=10000)
+            overtime_pay = st.number_input(get_text('overtime_pay'), value=50000, step=5000)
+            bonus = st.number_input(get_text('bonus'), value=0, step=10000)
+            allowances = st.number_input(get_text('allowances'), value=15000, step=1000)
+        
+        with col2:
+            st.markdown("#### Deduction Details")
+            insurance = st.number_input(get_text('insurance'), value=45000, step=1000)
+            tax = st.number_input(get_text('tax'), value=35000, step=1000)
+            other_deductions = st.number_input(get_text('other_deductions'), value=10000, step=1000)
+            payslip_date = st.date_input(get_text('payslip_date'), datetime.now().date())
+        
+        if st.form_submit_button(get_text('generate_payslip'), use_container_width=True):
+            # 급여 계산
+            salary_data = calculate_salary(basic_salary, overtime_pay, bonus, allowances, insurance, tax, other_deductions)
+            
+            # 급여 명세서 저장
+            new_payslip = {
+                'id': len(st.session_state.payroll_list) + 1,
+                'date': payslip_date.strftime('%Y/%m/%d'),
+                'salary_data': salary_data,
+                'created_at': datetime.now().strftime('%Y/%m/%d %H:%M')
+            }
+            
+            st.session_state.payroll_list.append(new_payslip)
+            
+            # 결과 표시
+            st.success("Payslip generated successfully!")
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric(get_text('total_income'), f"¥{salary_data['total_income']:,.0f}")
+            with col2:
+                st.metric(get_text('total_deduction'), f"¥{salary_data['total_deductions']:,.0f}")
+            with col3:
+                st.metric(get_text('net_salary'), f"¥{salary_data['net_salary']:,.0f}")
+            
+            # 상세 내역
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("##### Income Breakdown")
+                for item, amount in salary_data['income_breakdown'].items():
+                    st.write(f"{item}: ¥{amount:,.0f}")
+            
+            with col2:
+                st.markdown("##### Deduction Breakdown")
+                for item, amount in salary_data['deduction_breakdown'].items():
+                    st.write(f"{item}: ¥{amount:,.0f}")
+    
+    # 저장된 급여 명세서 목록
+    if st.session_state.payroll_list:
+        st.markdown("## Saved Payslips")
+        for payslip in st.session_state.payroll_list[-5:]:
+            with st.expander(f"Payslip - {payslip['date']}", expanded=False):
+                data = payslip['salary_data']
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric(get_text('total_income'), f"¥{data['total_income']:,.0f}")
+                with col2:
+                    st.metric(get_text('total_deduction'), f"¥{data['total_deductions']:,.0f}")
+                with col3:
+                    st.metric(get_text('net_salary'), f"¥{data['net_salary']:,.0f}")
 
 # 로그인 페이지
 def login():
@@ -556,7 +731,7 @@ def login():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         with st.container():
-            st.markdown("### ログイン")
+            st.markdown("### Login")
             with st.form("login_form"):
                 user_id = st.text_input(get_text('login_id'), placeholder="otsuka")
                 password = st.text_input(get_text('password'), type="password", placeholder="bank1234")
@@ -572,18 +747,24 @@ def login():
 # 언어 전환
 def render_language_switcher():
     current_lang = st.session_state.language
-    if current_lang == 'JP':
-        if st.button("🇰🇷 한국어", key="lang_switch"):
-            st.session_state.language = 'KR'
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("English", use_container_width=True, type="primary" if current_lang == 'EN' else "secondary"):
+            st.session_state.language = 'EN'
             st.rerun()
-    else:
-        if st.button("🇯🇵 日本語", key="lang_switch"):
+    with col2:
+        if st.button("日本語", use_container_width=True, type="primary" if current_lang == 'JP' else "secondary"):
             st.session_state.language = 'JP'
+            st.rerun()
+    with col3:
+        if st.button("한국어", use_container_width=True, type="primary" if current_lang == 'KR' else "secondary"):
+            st.session_state.language = 'KR'
             st.rerun()
 
 # 로그아웃
 def render_logout():
-    if st.button(get_text('logout'), key="logout_btn"):
+    if st.button(get_text('logout'), key="logout_btn", use_container_width=True):
         st.session_state.logged_in = False
         st.rerun()
 
@@ -593,31 +774,26 @@ def main():
     load_css()
     
     # 메인 컨테이너 시작
-    st.markdown('<div class="main">', unsafe_allow_html=True)
     st.markdown('<div class="main-container">', unsafe_allow_html=True)
-    st.markdown('<div class="content-container">', unsafe_allow_html=True)
     
     if not st.session_state.logged_in:
+        st.markdown('<div class="content-area">', unsafe_allow_html=True)
         login()
+        st.markdown('</div>', unsafe_allow_html=True)
     else:
         # 헤더
+        st.markdown('<div class="bank-header">', unsafe_allow_html=True)
         col1, col2 = st.columns([3, 1])
         with col1:
-            st.markdown(f"""
-            <div class="bank-header">
-                <h1 class="bank-title">{get_text('title')}</h1>
-                <p class="bank-subtitle">{get_text('subtitle')}</p>
-                <p style="margin: 0; opacity: 0.9; font-size: 1.1rem;">
-                    {get_text('welcome').format(st.session_state.user_data['name'])} | 
-                    {get_text('account_number')}: {st.session_state.user_data['account']}
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f'<h1 class="bank-title">{get_text("title")}</h1>', unsafe_allow_html=True)
+            st.markdown(f'<p class="bank-subtitle">{get_text("subtitle")}</p>', unsafe_allow_html=True)
+            st.markdown(f'<p style="margin: 0; opacity: 0.9; font-size: 1.1rem;">{get_text("welcome").format(st.session_state.user_data["name"])} | {get_text("account_number")}: {st.session_state.user_data["account"]}</p>', unsafe_allow_html=True)
         
         with col2:
-            st.write("")  # 공백
+            st.write("")
             render_language_switcher()
             render_logout()
+        st.markdown('</div>', unsafe_allow_html=True)
         
         # 네비게이션
         st.markdown('<div class="nav-container">', unsafe_allow_html=True)
@@ -625,17 +801,17 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
         
         # 페이지 내용
+        st.markdown('<div class="content-area">', unsafe_allow_html=True)
         if st.session_state.current_page == 'home':
             render_home()
         elif st.session_state.current_page == 'savings':
             render_savings()
         elif st.session_state.current_page == 'payroll':
             render_payroll()
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    # 컨테이너 종료
-    st.markdown('</div>', unsafe_allow_html=True)  # content-container
-    st.markdown('</div>', unsafe_allow_html=True)  # main-container
-    st.markdown('</div>', unsafe_allow_html=True)  # main
+    # 메인 컨테이너 종료
+    st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
