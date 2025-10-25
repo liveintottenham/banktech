@@ -174,204 +174,75 @@ def get_text(key):
     # 키가 없으면 영어로 기본값 반환
     return LANGUAGES[st.session_state.language].get(key, LANGUAGES['EN'].get(key, key))
 
-# CSS 스타일링 - 머터리얼 디자인
+# CSS 스타일링 - 매우 간단하게 수정
 def load_css():
     css = """
     <style>
-    /* 기본 스타일 - 머터리얼 디자인 */
+    /* 매우 간단한 스타일 - 하얀색 도형 문제 해결 */
     .stApp {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         font-family: 'Noto Sans JP', 'Segoe UI', sans-serif;
-    }
-    
-    .main-container {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border-radius: 24px;
-        margin: 20px;
-        padding: 0px;
-        box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-        min-height: calc(100vh - 40px);
-        overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    
-    .content-area {
-        padding: 30px;
     }
     
     /* 헤더 스타일 */
     .bank-header {
         background: linear-gradient(135deg, #6366F1, #8B5CF6);
         color: white;
-        padding: 2.5rem 3rem;
-        box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .bank-header::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-        background-size: 30px 30px;
-        animation: float 20s infinite linear;
-    }
-    
-    @keyframes float {
-        0% { transform: translate(0, 0) rotate(0deg); }
-        100% { transform: translate(-100px, -100px) rotate(360deg); }
+        padding: 2rem;
+        margin: -1rem -1rem 2rem -1rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     }
     
     .bank-title {
-        font-size: 2.4rem !important;
-        font-weight: 800 !important;
+        font-size: 2.2rem !important;
+        font-weight: 700 !important;
         margin-bottom: 0.5rem !important;
-        background: linear-gradient(135deg, #fff, #E0E7FF);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        color: white !important;
+        text-align: center;
     }
     
     .bank-subtitle {
         font-size: 1.1rem !important;
         opacity: 0.9;
-        font-weight: 400;
-        letter-spacing: 0.5px;
+        text-align: center;
+        margin-bottom: 1rem !important;
     }
     
     /* 네비게이션 */
     .nav-container {
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.95);
         padding: 1rem 2rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        margin: -1rem -1rem 2rem -1rem;
+        border-bottom: 1px solid #e0e0e0;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
     }
     
     /* 카드 스타일 */
-    .card {
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        margin-bottom: 2rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(135deg, #6366F1, #8B5CF6);
-    }
-    
-    .card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-    }
-    
     .metric-card {
         background: linear-gradient(135deg, #6366F1, #8B5CF6);
         color: white;
-        border-radius: 20px;
-        padding: 2rem;
+        border-radius: 12px;
+        padding: 1.5rem;
         text-align: center;
-        box-shadow: 0 15px 35px rgba(99, 102, 241, 0.3);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        margin-bottom: 1rem;
     }
     
-    .metric-card::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-        background-size: 20px 20px;
-        animation: float 15s infinite linear;
-    }
-    
-    .metric-card:hover {
-        transform: translateY(-5px) scale(1.02);
-        box-shadow: 0 20px 40px rgba(99, 102, 241, 0.4);
-    }
-    
-    /* 버튼 스타일 - 머터리얼 */
+    /* 버튼 스타일 */
     .stButton>button {
         background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
         color: white !important;
         border: none !important;
-        border-radius: 12px !important;
-        padding: 1rem 2rem !important;
+        border-radius: 8px !important;
+        padding: 0.75rem 1.5rem !important;
         font-weight: 600 !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3) !important;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .stButton>button::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.5s;
-    }
-    
-    .stButton>button:hover::before {
-        left: 100%;
     }
     
     .stButton>button:hover {
-        transform: translateY(-3px) !important;
-        box-shadow: 0 15px 35px rgba(99, 102, 241, 0.4) !important;
-    }
-    
-    /* 입력 필드 - 머터리얼 */
-    .stTextInput>div>div>input,
-    .stNumberInput>div>div>input,
-    .stDateInput>div>div>input,
-    .stSelectbox>div>div>select {
-        border: 2px solid #E5E7EB !important;
-        border-radius: 12px !important;
-        padding: 1rem 1.2rem !important;
-        font-size: 1rem !important;
-        background: rgba(255, 255, 255, 0.9) !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
-    }
-    
-    .stTextInput>div>div>input:focus,
-    .stNumberInput>div>div>input:focus,
-    .stDateInput>div>div>input:focus,
-    .stSelectbox>div>div>select:focus {
-        border-color: #6366F1 !important;
-        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1) !important;
-        transform: translateY(-2px);
-    }
-    
-    /* 테이블 스타일 */
-    .dataframe {
-        border-radius: 16px !important;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
-        overflow: hidden !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4) !important;
     }
     
     /* 캡처 방지 배너 */
@@ -381,34 +252,14 @@ def load_css():
         padding: 1rem;
         text-align: center;
         font-weight: bold;
-        font-size: 0.9rem;
-        border-radius: 12px;
-        margin-bottom: 2rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
         animation: blink 2s infinite;
-        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .no-capture::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-        animation: shine 3s infinite;
-    }
-    
-    @keyframes shine {
-        0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-        100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
     }
     
     @keyframes blink {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.8; transform: scale(1.02); }
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
     }
     
     /* 이중 언어 표기 */
@@ -416,69 +267,28 @@ def load_css():
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 0.8rem;
-        padding: 0.8rem;
-        background: rgba(99, 102, 241, 0.05);
-        border-radius: 12px;
-        border-left: 4px solid #6366F1;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 6px;
     }
     
     .bilingual-en {
         font-weight: 600;
         color: #1F2937;
-        font-size: 1rem;
     }
     
     .bilingual-jp {
         font-size: 0.85rem;
         color: #6B7280;
-        font-style: normal;
     }
     
-    /* 차트 컨테이너 */
-    .chart-container {
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        margin-bottom: 2rem;
-    }
-    
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800&display=swap');
-    
-    * {
-        font-family: 'Noto Sans JP', 'Segoe UI', sans-serif;
-    }
-    
-    /* 탭 스타일 */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background-color: rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        padding: 8px;
-    }
-    
-    .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        white-space: pre-wrap;
-        background-color: transparent;
-        border-radius: 12px;
-        gap: 8px;
-        padding: 0 24px;
-        font-weight: 600;
-    }
-    
-    .stTabs [aria-selected="true"] {
-        background-color: #6366F1 !important;
-        color: white !important;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
-# 적금 계산 함수 (실제 은행 방식)
+# 적금 계산 함수
 def calculate_savings_schedule(monthly_amount, period_years, interest_rate, start_date, adjustments=None):
     total_months = period_years * 12
     monthly_interest_rate = interest_rate / 100 / 12
@@ -535,7 +345,7 @@ def calculate_savings_schedule(monthly_amount, period_years, interest_rate, star
         'completion_rate': len([x for x in schedule if 'Completed' in x['Status']]) / total_months * 100
     }
 
-# 급여 계산 함수 (새로운 구조)
+# 급여 계산 함수
 def calculate_salary(basic_salary, overtime_pay, income_tax, residence_tax, health_insurance, pension, employment_insurance, other_deduction):
     total_income = basic_salary + overtime_pay
     total_deductions = income_tax + residence_tax + health_insurance + pension + employment_insurance + other_deduction
@@ -578,35 +388,6 @@ def render_nav():
                 st.session_state.current_page = page
                 st.rerun()
 
-# 대시보드 차트 생성 함수 (Streamlit 기본 차트 사용)
-def create_asset_growth_chart():
-    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    values = [14200000, 14500000, 14800000, 15000000, 15200000, 15400000, 15600000, 15800000, 16000000, 16200000, 16400000, 16600000]
-    
-    chart_data = pd.DataFrame({
-        'Month': months,
-        'Total Assets': values
-    })
-    
-    return chart_data
-
-def create_savings_distribution_chart(savings_list):
-    if not savings_list:
-        # 기본 데이터
-        chart_data = pd.DataFrame({
-            'Category': ['Regular Savings', 'Fixed Deposit', 'Investment'],
-            'Amount': [60, 25, 15]
-        })
-    else:
-        labels = [savings['name'] for savings in savings_list]
-        values = [savings['monthly_amount'] * savings['period'] * 12 for savings in savings_list]
-        chart_data = pd.DataFrame({
-            'Category': labels,
-            'Amount': values
-        })
-    
-    return chart_data
-
 # 홈 페이지
 def render_home():
     st.markdown(f"## {get_text('welcome').format(st.session_state.user_data['name'])}")
@@ -627,27 +408,24 @@ def render_home():
     with col1:
         st.markdown(f"""
         <div class="metric-card">
-            <div style="font-size: 1rem; opacity: 0.9; margin-bottom: 1rem;">{get_text('total_savings')}</div>
-            <div style="font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem;">¥{total_savings:,.0f}</div>
-            <div style="font-size: 0.9rem; opacity: 0.8;">+12.5% from last month</div>
+            <div style="font-size: 0.9rem; opacity: 0.9;">{get_text('total_savings')}</div>
+            <div style="font-size: 1.8rem; font-weight: 700;">¥{total_savings:,.0f}</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
         st.markdown(f"""
         <div class="metric-card">
-            <div style="font-size: 1rem; opacity: 0.9; margin-bottom: 1rem;">{get_text('monthly_payment')}</div>
-            <div style="font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem;">¥{monthly_payment:,.0f}</div>
-            <div style="font-size: 0.9rem; opacity: 0.8;">Active savings plans</div>
+            <div style="font-size: 0.9rem; opacity: 0.9;">{get_text('monthly_payment')}</div>
+            <div style="font-size: 1.8rem; font-weight: 700;">¥{monthly_payment:,.0f}</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col3:
         st.markdown(f"""
         <div class="metric-card">
-            <div style="font-size: 1rem; opacity: 0.9; margin-bottom: 1rem;">{get_text('active_plans')}</div>
-            <div style="font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem;">{active_plans}</div>
-            <div style="font-size: 0.9rem; opacity: 0.8;">Total ongoing plans</div>
+            <div style="font-size: 0.9rem; opacity: 0.9;">{get_text('active_plans')}</div>
+            <div style="font-size: 1.8rem; font-weight: 700;">{active_plans}</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -655,18 +433,28 @@ def render_home():
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
         st.markdown("### Asset Growth Trend")
-        chart_data = create_asset_growth_chart()
+        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        values = [14200000, 14500000, 14800000, 15000000, 15200000, 15400000, 15600000, 15800000, 16000000, 16200000, 16400000, 16600000]
+        
+        chart_data = pd.DataFrame({
+            'Month': months,
+            'Total Assets': values
+        })
         st.area_chart(chart_data.set_index('Month'), height=300)
-        st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
         st.markdown("### Savings Distribution")
-        chart_data = create_savings_distribution_chart(st.session_state.savings_list)
-        st.bar_chart(chart_data.set_index('Category'), height=300)
-        st.markdown('</div>', unsafe_allow_html=True)
+        if st.session_state.savings_list:
+            labels = [savings['name'] for savings in st.session_state.savings_list]
+            values = [savings['monthly_amount'] * savings['period'] * 12 for savings in st.session_state.savings_list]
+            chart_data = pd.DataFrame({
+                'Category': labels,
+                'Amount': values
+            })
+            st.bar_chart(chart_data.set_index('Category'), height=300)
+        else:
+            st.info("No savings plans yet")
     
     # 빠른 접근
     st.markdown(f"## {get_text('quick_access')}")
@@ -703,37 +491,23 @@ def render_savings():
         if 'temp_adjustments' not in st.session_state:
             st.session_state.temp_adjustments = {}
         
-        # 기본 정보 입력 폼
-        with st.form("basic_info_form"):
-            st.markdown("#### Basic Information")
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                customer_name = st.text_input(get_text('customer_name'), st.session_state.user_data['name'])
-                employee_number = st.text_input(get_text('employee_number'), st.session_state.user_data['emp_num'])
-                account_number = st.text_input(get_text('account_number'), st.session_state.user_data['account'])
-            
-            with col2:
-                savings_name = st.text_input(get_text('savings_name'), "Regular Savings Plan")
-                monthly_amount = st.number_input(get_text('monthly_amount'), min_value=1000, value=3000, step=1000)
-                period = st.selectbox(get_text('period'), [3, 5], index=0, format_func=lambda x: f"{x} Years")
-                interest_rate = st.number_input(get_text('interest_rate'), min_value=0.1, value=2.5, step=0.1, format="%.1f")
-                start_date = st.date_input(get_text('start_date'), date(2025, 1, 1))
-            
-            if st.form_submit_button("💾 Save Basic Info", use_container_width=True):
-                st.session_state.temp_basic_info = {
-                    'customer_name': customer_name,
-                    'employee_number': employee_number,
-                    'account_number': account_number,
-                    'savings_name': savings_name,
-                    'monthly_amount': monthly_amount,
-                    'period': period,
-                    'interest_rate': interest_rate,
-                    'start_date': start_date
-                }
-                st.success("Basic information saved!")
+        # 기본 정보 입력
+        st.markdown("#### Basic Information")
+        col1, col2 = st.columns(2)
         
-        # 조정 입력 폼
+        with col1:
+            customer_name = st.text_input(get_text('customer_name'), st.session_state.user_data['name'])
+            employee_number = st.text_input(get_text('employee_number'), st.session_state.user_data['emp_num'])
+            account_number = st.text_input(get_text('account_number'), st.session_state.user_data['account'])
+        
+        with col2:
+            savings_name = st.text_input(get_text('savings_name'), "Regular Savings Plan")
+            monthly_amount = st.number_input(get_text('monthly_amount'), min_value=1000, value=3000, step=1000)
+            period = st.selectbox(get_text('period'), [3, 5], index=0, format_func=lambda x: f"{x} Years")
+            interest_rate = st.number_input(get_text('interest_rate'), min_value=0.1, value=2.5, step=0.1, format="%.1f")
+            start_date = st.date_input(get_text('start_date'), date(2025, 1, 1))
+        
+        # 조정 입력
         st.markdown("#### Payment Adjustments")
         st.info("Set different payment amounts for specific months if needed")
         
@@ -755,8 +529,7 @@ def render_savings():
                 with col1:
                     st.write(f"📅 Month {month}: ¥{amount:,}")
                 with col2:
-                    default_amount = st.session_state.get('temp_basic_info', {}).get('monthly_amount', 3000)
-                    st.write(f"⚡ Default: ¥{default_amount:,}")
+                    st.write(f"⚡ Default: ¥{monthly_amount:,}")
                 with col3:
                     if st.button(f"🗑️", key=f"remove_{month}"):
                         del st.session_state.temp_adjustments[month]
@@ -764,43 +537,38 @@ def render_savings():
         
         # 최종 생성 버튼
         if st.button("🚀 Create Savings Plan", use_container_width=True, type="primary"):
-            if 'temp_basic_info' in st.session_state:
-                basic_info = st.session_state.temp_basic_info
-                adjustments = st.session_state.temp_adjustments.copy()
-                
-                # 적금 계산
-                calculation = calculate_savings_schedule(
-                    basic_info['monthly_amount'], 
-                    basic_info['period'], 
-                    basic_info['interest_rate'], 
-                    basic_info['start_date'], 
-                    adjustments
-                )
-                
-                # 새로운 적금 플랜 생성
-                new_savings = {
-                    'id': len(st.session_state.savings_list) + 1,
-                    'name': basic_info['savings_name'],
-                    'customer_name': basic_info['customer_name'],
-                    'employee_number': basic_info['employee_number'],
-                    'account_number': basic_info['account_number'],
-                    'monthly_amount': basic_info['monthly_amount'],
-                    'period': basic_info['period'],
-                    'interest_rate': basic_info['interest_rate'],
-                    'start_date': basic_info['start_date'].strftime('%Y/%m/%d'),
-                    'adjustments': adjustments,
-                    'calculation': calculation,
-                    'created_at': datetime.now().strftime('%Y/%m/%d %H:%M')
-                }
-                
-                st.session_state.savings_list.append(new_savings)
-                # 임시 데이터 초기화
-                st.session_state.temp_adjustments = {}
-                st.session_state.temp_basic_info = None
-                st.success("🎉 Savings plan created successfully!")
-                st.balloons()
-            else:
-                st.error("Please save basic information first!")
+            adjustments = st.session_state.temp_adjustments.copy()
+            
+            # 적금 계산
+            calculation = calculate_savings_schedule(
+                monthly_amount, 
+                period, 
+                interest_rate, 
+                start_date, 
+                adjustments
+            )
+            
+            # 새로운 적금 플랜 생성
+            new_savings = {
+                'id': len(st.session_state.savings_list) + 1,
+                'name': savings_name,
+                'customer_name': customer_name,
+                'employee_number': employee_number,
+                'account_number': account_number,
+                'monthly_amount': monthly_amount,
+                'period': period,
+                'interest_rate': interest_rate,
+                'start_date': start_date.strftime('%Y/%m/%d'),
+                'adjustments': adjustments,
+                'calculation': calculation,
+                'created_at': datetime.now().strftime('%Y/%m/%d %H:%M')
+            }
+            
+            st.session_state.savings_list.append(new_savings)
+            # 임시 데이터 초기화
+            st.session_state.temp_adjustments = {}
+            st.success("🎉 Savings plan created successfully!")
+            st.balloons()
     
     with tab2:
         st.subheader("Savings Plans List")
@@ -862,7 +630,7 @@ def render_savings():
                     # 입금 스케줄 - 이중 언어 표기
                     st.markdown("#### Payment Schedule / 入金スケジュール")
                     schedule_data = []
-                    for item in savings['calculation']['schedule']:
+                    for item in savings['calculation']['schedule'][:12]:  # 처음 12개만 표시
                         schedule_data.append({
                             'Month/回': item['Month'],
                             'Date/日付': item['Payment Date'],
@@ -944,20 +712,6 @@ def render_payroll():
                 st.markdown("##### Deduction Breakdown / 控除内訳詳細")
                 for item_key, item_data in salary_data['deduction_breakdown'].items():
                     st.markdown(f'<div class="bilingual"><span class="bilingual-en">{item_data["en"]}: ¥{item_data["amount"]:,.0f}</span><span class="bilingual-jp">{item_data["jp"]}</span></div>', unsafe_allow_html=True)
-    
-    # 저장된 급여 명세서 목록
-    if st.session_state.payroll_list:
-        st.markdown("## Saved Payslips / 保存された給与明細")
-        for payslip in st.session_state.payroll_list[-5:]:
-            with st.expander(f"📋 Payslip - {payslip['date']} / 給与明細 - {payslip['date']}", expanded=False):
-                data = payslip['salary_data']
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Total Income / 総支給額", f"¥{data['total_income']:,.0f}")
-                with col2:
-                    st.metric("Total Deduction / 総控除額", f"¥{data['total_deductions']:,.0f}")
-                with col3:
-                    st.metric("Net Salary / 差引支給額", f"¥{data['net_salary']:,.0f}")
 
 # 로그인 페이지
 def login():
@@ -970,19 +724,18 @@ def login():
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        with st.container():
-            st.markdown("### Login")
-            with st.form("login_form"):
-                user_id = st.text_input(get_text('login_id'), placeholder="otsuka")
-                password = st.text_input(get_text('password'), type="password", placeholder="bank1234")
-                
-                if st.form_submit_button(get_text('login'), use_container_width=True):
-                    if user_id == "otsuka" and password == "bank1234":
-                        st.session_state.logged_in = True
-                        st.session_state.current_page = 'home'
-                        st.rerun()
-                    else:
-                        st.error(get_text('login_error'))
+        st.markdown("### Login")
+        with st.form("login_form"):
+            user_id = st.text_input(get_text('login_id'), placeholder="otsuka")
+            password = st.text_input(get_text('password'), type="password", placeholder="bank1234")
+            
+            if st.form_submit_button(get_text('login'), use_container_width=True):
+                if user_id == "otsuka" and password == "bank1234":
+                    st.session_state.logged_in = True
+                    st.session_state.current_page = 'home'
+                    st.rerun()
+                else:
+                    st.error(get_text('login_error'))
 
 # 언어 전환
 def render_language_switcher():
@@ -1009,25 +762,28 @@ def main():
     initialize_session_state()
     load_css()
     
-    # 메인 컨테이너 시작
-    st.markdown('<div class="main-container">', unsafe_allow_html=True)
-    
     if not st.session_state.logged_in:
         login()
     else:
         # 헤더
-        st.markdown('<div class="bank-header">', unsafe_allow_html=True)
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            st.markdown(f'<h1 class="bank-title">{get_text("title")}</h1>', unsafe_allow_html=True)
-            st.markdown(f'<p class="bank-subtitle">{get_text("subtitle")}</p>', unsafe_allow_html=True)
-            st.markdown(f'<p style="margin: 0; opacity: 0.9; font-size: 1.1rem;">{get_text("welcome").format(st.session_state.user_data["name"])} | {get_text("account_number")}: {st.session_state.user_data["account"]}</p>', unsafe_allow_html=True)
-        
-        with col2:
-            st.write("")
-            render_language_switcher()
-            render_logout()
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="bank-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1 class="bank-title">{get_text('title')}</h1>
+                    <p class="bank-subtitle">{get_text('subtitle')}</p>
+                    <p style="margin: 0; opacity: 0.9;">
+                        {get_text('welcome').format(st.session_state.user_data['name'])} | 
+                        {get_text('account_number')}: {st.session_state.user_data['account']}
+                    </p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    {render_language_switcher()}
+                    {render_logout()}
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
         # 네비게이션
         st.markdown('<div class="nav-container">', unsafe_allow_html=True)
@@ -1035,17 +791,12 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
         
         # 페이지 내용
-        st.markdown('<div class="content-area">', unsafe_allow_html=True)
         if st.session_state.current_page == 'home':
             render_home()
         elif st.session_state.current_page == 'savings':
             render_savings()
         elif st.session_state.current_page == 'payroll':
             render_payroll()
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    # 메인 컨테이너 종료
-    st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
