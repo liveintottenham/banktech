@@ -20,6 +20,8 @@ def initialize_session_state():
         st.session_state.language = 'EN'
     if 'current_page' not in st.session_state:
         st.session_state.current_page = 'home'
+    if 'adjustments' not in st.session_state:
+        st.session_state.adjustments = []
     
     # 사용자 데이터
     if 'user_data' not in st.session_state:
@@ -93,7 +95,9 @@ LANGUAGES = {
         'add_adjustment': 'Add Adjustment',
         'adjustment_month': 'Adjustment Month',
         'adjustment_amount': 'Adjustment Amount',
-        'remove': 'Remove'
+        'remove': 'Remove',
+        'no_capture': '⚠️ SCREENSHOT AND PHOTOGRAPHY PROHIBITED',
+        'no_capture_jp': '⚠️ この画面のスクリーンショット・撮影は禁止されています'
     },
     'JP': {
         'title': '大塚銀行 従業員ポータル',
@@ -148,62 +152,9 @@ LANGUAGES = {
         'add_adjustment': '調整追加',
         'adjustment_month': '調整回',
         'adjustment_amount': '調整金額',
-        'remove': '削除'
-    },
-    'KR': {
-        'title': '오츠카 은행 직원 포털',
-        'subtitle': '보안 뱅킹 관리 시스템',
-        'login_id': '로그인 ID',
-        'password': '비밀번호',
-        'login': '로그인',
-        'login_error': '로그인 ID 또는 비밀번호가 올바르지 않습니다',
-        'home': '🏠 홈',
-        'savings': '💰 적금 관리',
-        'payroll': '📄 급여 명세서',
-        'welcome': '{}님, 환영합니다',
-        'account_number': '계좌번호',
-        'asset_overview': '자산 현황',
-        'total_savings': '총 적금액',
-        'active_plans': '진행 중인 플랜',
-        'monthly_payment': '월 납입액',
-        'recent_transactions': '최근 거래',
-        'quick_access': '빠른 접근',
-        'new_savings': '새 적금 만들기',
-        'view_savings': '적금 목록',
-        'savings_management': '적금 관리',
-        'savings_name': '적금 이름',
-        'monthly_amount': '월 납입액',
-        'period': '적금 기간',
-        'start_date': '시작일',
-        'interest_rate': '연이율',
-        'create_plan': '플랜 생성',
-        'savings_details': '적금 상세',
-        'payment_schedule': '납입 일정',
-        'logout': '로그아웃',
-        'customer_name': '고객명',
-        'employee_number': '사원번호',
-        'basic_info': '기본 정보',
-        'savings_calc': '적금 계산',
-        'adjust_payment': '납입 조정',
-        'payment_history': '납입 내역',
-        'basic_salary': '기본급',
-        'overtime_pay': '초과근무수당',
-        'bonus': '상여금',
-        'allowances': '기타 수당',
-        'insurance': '사회보험료',
-        'tax': '세금',
-        'other_deductions': '기타 공제',
-        'net_salary': '실 수령액',
-        'generate_payslip': '명세서 생성',
-        'payslip_date': '급여일',
-        'income_items': '지급 내역',
-        'deduction_items': '공제 내역',
-        'total_income': '총 지급액',
-        'total_deduction': '총 공제액',
-        'add_adjustment': '조정 추가',
-        'adjustment_month': '조정 회차',
-        'adjustment_amount': '조정 금액',
-        'remove': '삭제'
+        'remove': '削除',
+        'no_capture': '⚠️ SCREENSHOT AND PHOTOGRAPHY PROHIBITED',
+        'no_capture_jp': '⚠️ この画面のスクリーンショット・撮影は禁止されています'
     }
 }
 
@@ -224,7 +175,6 @@ def load_css():
         background: white;
         border-radius: 15px;
         margin: 20px;
-        padding: 0px;
         box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         min-height: calc(100vh - 40px);
         overflow: hidden;
@@ -323,6 +273,12 @@ def load_css():
         font-size: 0.9rem;
         border-radius: 6px;
         margin-bottom: 1rem;
+        animation: blink 2s infinite;
+    }
+    
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
     }
     
     /* 조정 아이템 */
@@ -502,8 +458,8 @@ def render_savings():
     with tab1:
         st.subheader("Create New Savings Plan")
         
-        # 캡처 방지 배너
-        st.markdown('<div class="no-capture">⚠️ SCREENSHOT AND PHOTOGRAPHY PROHIBITED</div>', unsafe_allow_html=True)
+        # 캡처 방지 배너 - 일본어로 표시
+        st.markdown(f'<div class="no-capture">{LANGUAGES["JP"]["no_capture_jp"]}</div>', unsafe_allow_html=True)
         
         with st.form("new_savings_plan"):
             st.markdown("#### Basic Information")
@@ -525,9 +481,6 @@ def render_savings():
             st.info("Set different payment amounts for specific months if needed")
             
             # 동적 조정 입력
-            if 'adjustments' not in st.session_state:
-                st.session_state.adjustments = []
-            
             adjustments_dict = {}
             
             for i, adj in enumerate(st.session_state.adjustments):
@@ -537,7 +490,7 @@ def render_savings():
                 with col2:
                     amount = st.number_input(f"Amount", min_value=0, value=adj['amount'], key=f"amount_{i}")
                 with col3:
-                    if st.button(f"🗑️", key=f"remove_{i}"):
+                    if st.form_submit_button(f"🗑️", key=f"remove_{i}", use_container_width=True):
                         st.session_state.adjustments.pop(i)
                         st.rerun()
                 adjustments_dict[month] = amount
@@ -549,11 +502,13 @@ def render_savings():
             with col2:
                 new_amount = st.number_input("Amount", min_value=0, value=monthly_amount, key="new_amount")
             with col3:
-                if st.button("➕ Add"):
+                add_pressed = st.form_submit_button("➕ Add", use_container_width=True)
+                if add_pressed:
                     st.session_state.adjustments.append({'month': new_month, 'amount': new_amount})
                     st.rerun()
             
-            if st.form_submit_button(get_text('create_plan'), use_container_width=True):
+            submit_button = st.form_submit_button(get_text('create_plan'), use_container_width=True)
+            if submit_button:
                 # 적금 계산
                 calculation = calculate_savings_schedule(monthly_amount, period, interest_rate, start_date, adjustments_dict)
                 
@@ -586,8 +541,8 @@ def render_savings():
         else:
             for savings in st.session_state.savings_list:
                 with st.expander(f"📒 {savings['name']} - {savings['account_number']}", expanded=False):
-                    # 캡처 방지 배너
-                    st.markdown('<div class="no-capture">⚠️ SCREENSHOT AND PHOTOGRAPHY PROHIBITED</div>', unsafe_allow_html=True)
+                    # 캡처 방지 배너 - 일본어로 표시
+                    st.markdown(f'<div class="no-capture">{LANGUAGES["JP"]["no_capture_jp"]}</div>', unsafe_allow_html=True)
                     
                     # 기본 정보
                     st.markdown("#### Basic Information")
@@ -648,6 +603,9 @@ def render_savings():
 # 급여 명세서 페이지
 def render_payroll():
     st.markdown(f"## {get_text('payroll_management')}")
+    
+    # 캡처 방지 배너 - 일본어로 표시
+    st.markdown(f'<div class="no-capture">{LANGUAGES["JP"]["no_capture_jp"]}</div>', unsafe_allow_html=True)
     
     with st.form("payroll_form"):
         st.subheader("Payroll Information")
@@ -747,7 +705,7 @@ def login():
 # 언어 전환
 def render_language_switcher():
     current_lang = st.session_state.language
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     
     with col1:
         if st.button("English", use_container_width=True, type="primary" if current_lang == 'EN' else "secondary"):
@@ -756,10 +714,6 @@ def render_language_switcher():
     with col2:
         if st.button("日本語", use_container_width=True, type="primary" if current_lang == 'JP' else "secondary"):
             st.session_state.language = 'JP'
-            st.rerun()
-    with col3:
-        if st.button("한국어", use_container_width=True, type="primary" if current_lang == 'KR' else "secondary"):
-            st.session_state.language = 'KR'
             st.rerun()
 
 # 로그아웃
