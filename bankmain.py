@@ -2,8 +2,7 @@ import streamlit as st
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 import pandas as pd
-import plotly.graph_objects as go
-import plotly.express as px
+import numpy as np
 
 # Streamlit 페이지 설정
 st.set_page_config(
@@ -146,7 +145,9 @@ LANGUAGES = {
         'theme_dark': 'ダークモード',
         'view_details': '詳細を見る',
         'monthly_trend': '月次推移',
-        'asset_allocation': '資産配分'
+        'asset_allocation': '資産配分',
+        'transaction_history': '取引履歴',
+        'financial_analysis': '財務分析'
     },
     'KR': {
         'title': '오츠카 은행 직원 포털',
@@ -216,7 +217,9 @@ LANGUAGES = {
         'theme_dark': '다크 모드',
         'view_details': '상세 보기',
         'monthly_trend': '월별 추이',
-        'asset_allocation': '자산 배분'
+        'asset_allocation': '자산 배분',
+        'transaction_history': '거래 내역',
+        'financial_analysis': '재무 분석'
     }
 }
 
@@ -302,22 +305,6 @@ def load_css():
         z-index: 100;
     }
     
-    .control-btn {
-        background: rgba(255,255,255,0.2) !important;
-        border: 1px solid rgba(255,255,255,0.3) !important;
-        color: white !important;
-        border-radius: 25px !important;
-        padding: 0.5rem 1.2rem !important;
-        font-weight: 500 !important;
-        backdrop-filter: blur(10px);
-        transition: all 0.3s ease !important;
-    }
-    
-    .control-btn:hover {
-        background: rgba(255,255,255,0.3) !important;
-        transform: translateY(-2px) !important;
-    }
-    
     /* 네비게이션 */
     .nav-container {
         background: white;
@@ -326,7 +313,7 @@ def load_css():
         margin-bottom: 2rem;
         box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         display: flex;
-        gap: 0;
+        gap: 1rem;
         border: 1px solid rgba(0,0,0,0.05);
     }
     
@@ -335,28 +322,29 @@ def load_css():
         border: 1px solid #4a5568;
     }
     
-    .nav-item {
-        padding: 1rem 2rem;
+    .nav-btn {
+        flex: 1;
+        padding: 1rem 1.5rem;
+        border: none;
         border-radius: 10px;
+        background: transparent;
+        color: #666;
+        font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
-        font-weight: 600;
-        color: #666;
-        text-decoration: none;
-        margin: 0 0.5rem;
     }
     
-    .dark-mode .nav-item {
+    .dark-mode .nav-btn {
         color: #cbd5e0;
     }
     
-    .nav-item.active {
+    .nav-btn.active {
         background: linear-gradient(135deg, #667eea, #764ba2);
         color: white;
         box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
     }
     
-    .nav-item:hover:not(.active) {
+    .nav-btn:hover:not(.active) {
         background: rgba(102, 126, 234, 0.1);
         color: #667eea;
     }
@@ -396,24 +384,18 @@ def load_css():
         -webkit-background-clip: text;
     }
     
-    /* 메트릭 카드 */
-    .metric-card {
+    /* 차트 컨테이너 */
+    .chart-container {
         background: white;
-        border-radius: 12px;
+        border-radius: 15px;
         padding: 1.5rem;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        border-left: 4px solid #667eea;
-        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
     }
     
-    .dark-mode .metric-card {
+    .dark-mode .chart-container {
         background: #2d3748;
-        border-left: 4px solid #764ba2;
-    }
-    
-    .metric-card:hover {
-        transform: translateX(5px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        border: 1px solid #4a5568;
     }
     
     /* 버튼 스타일 */
@@ -492,10 +474,22 @@ def load_css():
         font-weight: 700;
     }
     
-    .glass-effect {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+    .progress-bar {
+        height: 8px;
+        background: #e2e8f0;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+    
+    .dark-mode .progress-bar {
+        background: #4a5568;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 4px;
     }
     
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800&display=swap');
@@ -510,30 +504,33 @@ def load_css():
 
 def render_language_switcher():
     current_lang = st.session_state.language
-    if current_lang == 'JP':
-        if st.button("🇰🇷 한국어", key="lang_switch", help="Switch to Korean"):
-            st.session_state.language = 'KR'
-            st.rerun()
-    else:
-        if st.button("🇯🇵 日本語", key="lang_switch", help="Switch to Japanese"):
-            st.session_state.language = 'JP'
-            st.rerun()
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if current_lang == 'JP':
+            if st.button("🇰🇷 한국어", use_container_width=True, key="lang_switch"):
+                st.session_state.language = 'KR'
+                st.rerun()
+        else:
+            if st.button("🇯🇵 日本語", use_container_width=True, key="lang_switch"):
+                st.session_state.language = 'JP'
+                st.rerun()
     return ""
 
 def render_theme_switcher():
     current_theme = st.session_state.theme
-    if current_theme == 'light':
-        if st.button("🌙", key="theme_switch", help=get_text('theme_dark')):
-            st.session_state.theme = 'dark'
-            st.rerun()
-    else:
-        if st.button("☀️", key="theme_switch", help=get_text('theme_light')):
-            st.session_state.theme = 'light'
-            st.rerun()
+    with st.container():
+        if current_theme == 'light':
+            if st.button("🌙 다크모드", use_container_width=True, key="theme_switch"):
+                st.session_state.theme = 'dark'
+                st.rerun()
+        else:
+            if st.button("☀️ 라이트모드", use_container_width=True, key="theme_switch"):
+                st.session_state.theme = 'light'
+                st.rerun()
     return ""
 
 def render_logout():
-    if st.button(get_text('logout'), key="logout_btn"):
+    if st.button(get_text('logout'), key="logout_btn", use_container_width=True):
         st.session_state.logged_in = False
         st.rerun()
     return ""
@@ -548,10 +545,38 @@ def render_nav():
     cols = st.columns(len(nav_items))
     for idx, (page, label) in enumerate(nav_items):
         with cols[idx]:
-            if st.button(label, use_container_width=True, 
-                        type="primary" if st.session_state.current_page == page else "secondary"):
+            is_active = st.session_state.current_page == page
+            if st.button(
+                label, 
+                use_container_width=True,
+                type="primary" if is_active else "secondary"
+            ):
                 st.session_state.current_page = page
                 st.rerun()
+
+# 간단한 차트 생성 함수들
+def create_asset_trend_chart():
+    months = ['1月', '2月', '3月', '4月', '5月', '6月']
+    values = [14200000, 14500000, 14800000, 15000000, 15200000, 15480230]
+    
+    chart_data = pd.DataFrame({
+        '월': months,
+        '자산': values
+    })
+    
+    st.area_chart(chart_data.set_index('월'), height=300)
+
+def create_asset_allocation_chart():
+    assets = st.session_state.user_data['assets']
+    labels = [get_text('deposits'), get_text('investments'), get_text('savings'), get_text('loans')]
+    values = [assets['deposits'], assets['investments'], assets['savings'], assets['loans']]
+    
+    chart_data = pd.DataFrame({
+        '카테고리': labels,
+        '금액': values
+    })
+    
+    st.bar_chart(chart_data.set_index('카테고리'), height=300)
 
 # 대시보드 - 자산 현황
 def render_dashboard():
@@ -603,50 +628,39 @@ def render_dashboard():
     
     with col1:
         st.markdown(f"### {get_text('monthly_trend')}")
-        # 자산 추이 그래프
-        months = ['1月', '2月', '3月', '4月', '5月', '6月']
-        values = [14200000, 14500000, 14800000, 15000000, 15200000, 15480230]
-        
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=months, y=values,
-            mode='lines+markers',
-            line=dict(color='#667eea', width=4),
-            marker=dict(size=8, color='#764ba2'),
-            fill='tozeroy',
-            fillcolor='rgba(102, 126, 234, 0.1)'
-        ))
-        
-        fig.update_layout(
-            height=300,
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='#2c3e50'),
-            margin=dict(l=0, r=0, t=30, b=0)
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
+        with st.container():
+            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+            create_asset_trend_chart()
+            st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
         st.markdown(f"### {get_text('asset_allocation')}")
-        # 자산 배분 파이 차트
-        labels = [get_text('deposits'), get_text('investments'), get_text('savings'), get_text('loans')]
-        values = [assets['deposits'], assets['investments'], assets['savings'], assets['loans']]
-        
-        fig = go.Figure(data=[go.Pie(
-            labels=labels,
-            values=values,
-            hole=.3,
-            marker_colors=['#667eea', '#764ba2', '#f093fb', '#4ecdc4']
-        )])
-        
-        fig.update_layout(
-            height=300,
-            margin=dict(l=0, r=0, t=30, b=0),
-            showlegend=True
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
+        with st.container():
+            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+            create_asset_allocation_chart()
+            st.markdown('</div>', unsafe_allow_html=True)
+    
+    # 빠른 액션 버튼
+    st.markdown(f"### {get_text('quick_actions')}")
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        if st.button("💰 송금하기", use_container_width=True, icon="💸"):
+            st.info("송금 기능은 곧 제공될 예정입니다.")
+    
+    with col2:
+        if st.button("📊 거래내역", use_container_width=True, icon="📈"):
+            st.session_state.current_page = 'loan'
+            st.rerun()
+    
+    with col3:
+        if st.button("🧾 명세서", use_container_width=True, icon="📄"):
+            st.session_state.current_page = 'payroll'
+            st.rerun()
+    
+    with col4:
+        if st.button("⚙️ 설정", use_container_width=True, icon="🔧"):
+            st.info("설정 페이지는 곧 제공될 예정입니다.")
     
     # 최근 거래
     st.markdown(f"### {get_text('recent_transactions')}")
@@ -664,6 +678,82 @@ def render_dashboard():
         use_container_width=True,
         height=250
     )
+
+# 적금 관리 페이지
+def render_savings_management():
+    st.markdown(f"## {get_text('savings_management')}")
+    st.markdown(f"*{get_text('savings_subtitle')}*")
+    
+    # 적금 정보 카드
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("월 납입액", "¥4,400")
+    
+    with col2:
+        st.metric("총 적금액", "¥158,400")
+    
+    with col3:
+        st.metric("예상 이자", "¥15,840")
+    
+    # 적금 진행 상황
+    st.markdown("### 적금 진행률")
+    progress = 45  # 45% 진행
+    st.markdown(f"""
+    <div class="progress-bar">
+        <div class="progress-fill" style="width: {progress}%"></div>
+    </div>
+    <div style="text-align: center; margin-top: 0.5rem; font-weight: 600;">
+        {progress}% 완료 (18/36개월)
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 적금 상세 정보
+    st.markdown("### 적금 상세 정보")
+    savings_info = {
+        "적금 시작일": "2025년 2월 25일",
+        "만기일": "2028년 2월 25일",
+        "월 납입일": "매월 25일",
+        "적금 금액": "¥4,400",
+        "연이율": "10.03%",
+        "총 납입 횟수": "36회"
+    }
+    
+    for key, value in savings_info.items():
+        col1, col2 = st.columns([1, 2])
+        col1.write(f"**{key}**")
+        col2.write(value)
+
+# 급여 명세서 페이지
+def render_payroll():
+    st.markdown(f"## {get_text('payslip_title')}")
+    
+    payslip = st.session_state.payslip_data
+    total_income = sum(item["amount"] for item in payslip["income_items"])
+    total_deduction = sum(item["amount"] for item in payslip["deduction_items"])
+    net_pay = total_income - total_deduction
+    
+    # 급여 요약
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("총 지급액", f"¥{total_income:,}")
+    
+    with col2:
+        st.metric("총 공제액", f"¥{total_deduction:,}")
+    
+    with col3:
+        st.metric("실 수령액", f"¥{net_pay:,}", delta="정상")
+    
+    # 지급 내역
+    st.markdown(f"### {get_text('income_breakdown')}")
+    income_df = pd.DataFrame(payslip["income_items"])
+    st.dataframe(income_df, use_container_width=True)
+    
+    # 공제 내역
+    st.markdown(f"### {get_text('deduction_breakdown')}")
+    deduction_df = pd.DataFrame(payslip["deduction_items"])
+    st.dataframe(deduction_df, use_container_width=True)
 
 # 로그인 페이지
 def login():
@@ -706,21 +796,25 @@ def main():
         login()
     else:
         # 헤더
-        st.markdown(f"""
-        <div class="bank-header">
-            <div class="header-controls">
-                {render_language_switcher()}
-                {render_theme_switcher()}
-                {render_logout()}
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown(f"""
+            <div class="bank-header">
+                <h1 class="bank-title">{get_text('title')}</h1>
+                <p class="bank-subtitle">{get_text('subtitle')}</p>
+                <div style="margin-top: 1rem;">
+                    <h3 style="margin:0; font-weight:300;">{get_text('welcome').format(st.session_state.user_data['name'])}</h3>
+                    <p style="margin:0; opacity:0.8;">{st.session_state.user_data['department']} | {get_text('account_number')}: {st.session_state.user_data['account']}</p>
+                </div>
             </div>
-            <h1 class="bank-title">{get_text('title')}</h1>
-            <p class="bank-subtitle">{get_text('subtitle')}</p>
-            <div style="margin-top: 1rem;">
-                <h3 style="margin:0; font-weight:300;">{get_text('welcome').format(st.session_state.user_data['name'])}</h3>
-                <p style="margin:0; opacity:0.8;">{st.session_state.user_data['department']} | {get_text('account_number')}: {st.session_state.user_data['account']}</p>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown('<div class="header-controls">', unsafe_allow_html=True)
+            render_language_switcher()
+            render_theme_switcher()
+            render_logout()
+            st.markdown('</div>', unsafe_allow_html=True)
         
         # 네비게이션
         render_nav()
@@ -729,11 +823,9 @@ def main():
         if st.session_state.current_page == 'home':
             render_dashboard()
         elif st.session_state.current_page == 'loan':
-            # 간단한 적금 관리 페이지 (기존 코드와 유사)
-            st.info("積立管理ページは現在開発中です。")
+            render_savings_management()
         elif st.session_state.current_page == 'payroll':
-            # 간단한 급여명세서 페이지 (기존 코드와 유사)
-            st.info("給与明細ページは現在開発中です。")
+            render_payroll()
     
     # 메인 컨테이너 종료
     st.markdown('</div>', unsafe_allow_html=True)
