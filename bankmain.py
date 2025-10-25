@@ -3,8 +3,6 @@ from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
-import plotly.express as px
 
 # Streamlit 페이지 설정
 st.set_page_config(
@@ -580,65 +578,34 @@ def render_nav():
                 st.session_state.current_page = page
                 st.rerun()
 
-# 대시보드 차트 생성 함수
+# 대시보드 차트 생성 함수 (Streamlit 기본 차트 사용)
 def create_asset_growth_chart():
     months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     values = [14200000, 14500000, 14800000, 15000000, 15200000, 15400000, 15600000, 15800000, 16000000, 16200000, 16400000, 16600000]
     
-    fig = go.Figure()
+    chart_data = pd.DataFrame({
+        'Month': months,
+        'Total Assets': values
+    })
     
-    fig.add_trace(go.Scatter(
-        x=months,
-        y=values,
-        mode='lines+markers',
-        line=dict(color='#6366F1', width=4),
-        marker=dict(size=8, color='#8B5CF6'),
-        fill='tozeroy',
-        fillcolor='rgba(99, 102, 241, 0.1)',
-        name='Total Assets'
-    ))
-    
-    fig.update_layout(
-        height=300,
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        font=dict(color='#2D3748'),
-        margin=dict(l=0, r=0, t=0, b=0),
-        showlegend=False,
-        xaxis=dict(showgrid=False),
-        yaxis=dict(showgrid=True, gridcolor='rgba(0,0,0,0.1)')
-    )
-    
-    return fig
+    return chart_data
 
 def create_savings_distribution_chart(savings_list):
     if not savings_list:
         # 기본 데이터
-        labels = ['Regular Savings', 'Fixed Deposit', 'Investment']
-        values = [60, 25, 15]
+        chart_data = pd.DataFrame({
+            'Category': ['Regular Savings', 'Fixed Deposit', 'Investment'],
+            'Amount': [60, 25, 15]
+        })
     else:
         labels = [savings['name'] for savings in savings_list]
         values = [savings['monthly_amount'] * savings['period'] * 12 for savings in savings_list]
+        chart_data = pd.DataFrame({
+            'Category': labels,
+            'Amount': values
+        })
     
-    colors = ['#6366F1', '#8B5CF6', '#A855F7', '#C084FC', '#D946EF']
-    
-    fig = go.Figure(data=[go.Pie(
-        labels=labels,
-        values=values,
-        hole=.6,
-        marker_colors=colors,
-        textinfo='label+percent',
-        insidetextorientation='radial'
-    )])
-    
-    fig.update_layout(
-        height=300,
-        margin=dict(l=0, r=0, t=0, b=0),
-        showlegend=False,
-        annotations=[dict(text='Savings', x=0.5, y=0.5, font_size=16, showarrow=False)]
-    )
-    
-    return fig
+    return chart_data
 
 # 홈 페이지
 def render_home():
@@ -690,15 +657,15 @@ def render_home():
     with col1:
         st.markdown('<div class="chart-container">', unsafe_allow_html=True)
         st.markdown("### Asset Growth Trend")
-        fig = create_asset_growth_chart()
-        st.plotly_chart(fig, use_container_width=True)
+        chart_data = create_asset_growth_chart()
+        st.area_chart(chart_data.set_index('Month'), height=300)
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
         st.markdown('<div class="chart-container">', unsafe_allow_html=True)
         st.markdown("### Savings Distribution")
-        fig = create_savings_distribution_chart(st.session_state.savings_list)
-        st.plotly_chart(fig, use_container_width=True)
+        chart_data = create_savings_distribution_chart(st.session_state.savings_list)
+        st.bar_chart(chart_data.set_index('Category'), height=300)
         st.markdown('</div>', unsafe_allow_html=True)
     
     # 빠른 접근
