@@ -4,6 +4,8 @@ from dateutil.relativedelta import relativedelta
 import pandas as pd
 import numpy as np
 import time
+import base64
+from io import BytesIO
 
 # Streamlit 페이지 설정
 st.set_page_config(
@@ -46,8 +48,8 @@ def initialize_session_state():
 # 다국어 지원
 LANGUAGES = {
     'EN': {
-        'title': 'Otsuka Bank Employee Portal',
-        'subtitle': 'Secure Banking Management System',
+        'title': 'Otsuka Bank',
+        'subtitle': 'Employee Banking Portal',
         'login_id': 'Login ID',
         'password': 'Password',
         'login': 'Login',
@@ -100,11 +102,14 @@ LANGUAGES = {
         'adjustment_amount': 'Adjustment Amount',
         'remove': 'Remove',
         'no_capture': '⚠️ この画面のスクリーンショット・撮影は禁止されています',
-        'security_warning': '🔒 セキュリティ警告: このページは監視されています'
+        'security_warning': '🔒 セキュリティ警告: このページは監視されています',
+        'download_payslip': '📥 給与明細をダウンロード',
+        'announcement': '📢 お知らせ',
+        'announcement_content': 'システムメンテナンス: 12月25日 2:00-4:00'
     },
     'JP': {
-        'title': '大塚銀行 従業員ポータル',
-        'subtitle': 'セキュアバンキング管理システム',
+        'title': '大塚銀行',
+        'subtitle': '従業員バンキングポータル',
         'login_id': 'ログインID',
         'password': 'パスワード',
         'login': 'ログイン',
@@ -157,40 +162,228 @@ LANGUAGES = {
         'adjustment_amount': '調整金額',
         'remove': '削除',
         'no_capture': '⚠️ この画面のスクリーンショット・撮影は禁止されています',
-        'security_warning': '🔒 セキュリティ警告: このページは監視されています'
+        'security_warning': '🔒 セキュリティ警告: このページは監視されています',
+        'download_payslip': '📥 給与明細をダウンロード',
+        'announcement': '📢 お知らせ',
+        'announcement_content': 'システムメンテナンス: 12月25日 2:00-4:00'
     }
 }
 
 def get_text(key):
     return LANGUAGES[st.session_state.language].get(key, LANGUAGES['EN'].get(key, key))
 
-# CSS 스타일링 - 모던 머터리얼 디자인
+# 급여명세서 HTML 생성 함수
+def create_payslip_html(salary_data, payslip_date, user_data):
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>給与明細 - {payslip_date}</title>
+        <style>
+            body {{
+                font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+                margin: 0;
+                padding: 20px;
+                background: #f5f5f5;
+                color: #333;
+            }}
+            .payslip-container {{
+                max-width: 800px;
+                margin: 0 auto;
+                background: white;
+                padding: 30px;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+                border-radius: 8px;
+            }}
+            .header {{
+                text-align: center;
+                border-bottom: 3px solid #2c5282;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }}
+            .company-name {{
+                font-size: 24px;
+                font-weight: bold;
+                color: #2c5282;
+                margin-bottom: 10px;
+            }}
+            .title {{
+                font-size: 20px;
+                color: #333;
+                margin-bottom: 20px;
+            }}
+            .info-section {{
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                margin-bottom: 30px;
+            }}
+            .info-box {{
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 6px;
+                border-left: 4px solid #2c5282;
+            }}
+            .amount-section {{
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+                margin-bottom: 30px;
+            }}
+            .income-box, .deduction-box {{
+                padding: 20px;
+                border-radius: 8px;
+            }}
+            .income-box {{
+                background: #f0fff4;
+                border: 2px solid #38a169;
+            }}
+            .deduction-box {{
+                background: #fff5f5;
+                border: 2px solid #e53e3e;
+            }}
+            .total-section {{
+                background: #2c5282;
+                color: white;
+                padding: 25px;
+                border-radius: 8px;
+                text-align: center;
+                margin-top: 20px;
+            }}
+            .total-amount {{
+                font-size: 28px;
+                font-weight: bold;
+                margin: 10px 0;
+            }}
+            .detail-row {{
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 0;
+                border-bottom: 1px solid #e2e8f0;
+            }}
+            .footer {{
+                text-align: center;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #e2e8f0;
+                color: #666;
+                font-size: 12px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="payslip-container">
+            <div class="header">
+                <div class="company-name">大塚銀行</div>
+                <div class="title">給与明細書</div>
+                <div>支給日: {payslip_date}</div>
+            </div>
+            
+            <div class="info-section">
+                <div class="info-box">
+                    <strong>氏名</strong><br>
+                    {user_data['name']}<br>
+                    <strong>社員番号</strong><br>
+                    {user_data['emp_num']}
+                </div>
+                <div class="info-box">
+                    <strong>所属部署</strong><br>
+                    {user_data['department']}<br>
+                    <strong>口座番号</strong><br>
+                    {user_data['account']}
+                </div>
+            </div>
+            
+            <div class="amount-section">
+                <div class="income-box">
+                    <h3 style="color: #38a169; margin-top: 0;">支給内訳</h3>
+                    <div class="detail-row">
+                        <span>基本給</span>
+                        <span>¥{salary_data['income_breakdown']['basic_salary']['amount']:,.0f}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>残業代</span>
+                        <span>¥{salary_data['income_breakdown']['overtime_pay']['amount']:,.0f}</span>
+                    </div>
+                    <div style="border-top: 2px solid #38a169; padding-top: 10px; margin-top: 10px;">
+                        <div class="detail-row">
+                            <strong>総支給額</strong>
+                            <strong>¥{salary_data['total_income']:,.0f}</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="deduction-box">
+                    <h3 style="color: #e53e3e; margin-top: 0;">控除内訳</h3>
+                    <div class="detail-row">
+                        <span>所得税</span>
+                        <span>¥{salary_data['deduction_breakdown']['income_tax']['amount']:,.0f}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>住民税</span>
+                        <span>¥{salary_data['deduction_breakdown']['residence_tax']['amount']:,.0f}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>健康保険</span>
+                        <span>¥{salary_data['deduction_breakdown']['health_insurance']['amount']:,.0f}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>厚生年金</span>
+                        <span>¥{salary_data['deduction_breakdown']['pension']['amount']:,.0f}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>雇用保険</span>
+                        <span>¥{salary_data['deduction_breakdown']['employment_insurance']['amount']:,.0f}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>その他控除</span>
+                        <span>¥{salary_data['deduction_breakdown']['other_deduction']['amount']:,.0f}</span>
+                    </div>
+                    <div style="border-top: 2px solid #e53e3e; padding-top: 10px; margin-top: 10px;">
+                        <div class="detail-row">
+                            <strong>総控除額</strong>
+                            <strong>¥{salary_data['total_deductions']:,.0f}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="total-section">
+                <div>差引支給額</div>
+                <div class="total-amount">¥{salary_data['net_salary']:,.0f}</div>
+                <div>振込予定日: {payslip_date}</div>
+            </div>
+            
+            <div class="footer">
+                この書類は大塚銀行従業員ポータルで発行されました<br>
+                発行日時: {datetime.now().strftime('%Y年%m月%d日 %H:%M')}
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html_content
+
+# CSS 스타일링 - 개선된 모던 디자인
 def load_css():
     css = """
     <style>
     /* 기본 스타일 - 세련된 그레이 그라데이션 */
     .stApp {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #f8f9fa 100%);
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
         font-family: 'Noto Sans JP', 'Segoe UI', 'Hiragino Sans', sans-serif;
-        color: #2d3748;
+        color: #1e293b;
     }
     
-    /* 메인 콘텐츠 영역 */
-    .main-content {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 0px;
-        padding: 0px;
-        margin: 0px;
-    }
-    
-    /* 헤더 스타일 - 모던한 은행 디자인 */
+    /* 헤더 스타일 - 완전히 새로 디자인 */
     .bank-header {
-        background: linear-gradient(135deg, #2c5282 0%, #3182ce 100%);
+        background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
         color: white;
-        padding: 2.5rem 0;
+        padding: 2rem 0 1.5rem 0;
         margin: -1rem -1rem 0 -1rem;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        border-bottom: none;
+        box-shadow: 0 4px 20px rgba(30, 58, 138, 0.2);
         position: relative;
         overflow: hidden;
     }
@@ -202,213 +395,181 @@ def load_css():
         left: 0;
         right: 0;
         bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" opacity="0.1"><polygon points="0,0 1000,50 1000,100 0,100" fill="white"/></svg>');
-        background-size: cover;
+        background: 
+            radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.2) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(79, 70, 229, 0.15) 0%, transparent 50%);
+    }
+    
+    .header-content {
+        position: relative;
+        z-index: 2;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+    
+    .logo-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+    
+    .bank-logo {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .logo-icon {
+        font-size: 2.5rem;
+        background: rgba(255,255,255,0.1);
+        padding: 0.8rem;
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .logo-text {
+        display: flex;
+        flex-direction: column;
     }
     
     .bank-title {
-        font-size: 2.8rem !important;
-        font-weight: 700 !important;
-        margin-bottom: 0.5rem !important;
+        font-size: 2.2rem !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
         color: white !important;
-        text-align: center;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         letter-spacing: -0.5px;
-        position: relative;
+        line-height: 1.1;
     }
     
     .bank-subtitle {
-        font-size: 1.2rem !important;
-        opacity: 0.95;
-        text-align: center;
-        margin-bottom: 0 !important;
+        font-size: 1.1rem !important;
+        opacity: 0.9;
+        margin: 0.2rem 0 0 0 !important;
         font-weight: 400;
         letter-spacing: 0.3px;
-        position: relative;
     }
     
-    /* 네비게이션 - 모던한 탭 디자인 */
+    .user-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.3rem;
+    }
+    
+    .welcome-text {
+        font-size: 1rem;
+        opacity: 0.95;
+        font-weight: 500;
+    }
+    
+    .account-info {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    
+    /* 상단 컨트롤 섹션 */
+    .top-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 1rem 0;
+        gap: 1rem;
+    }
+    
+    .controls-left {
+        display: flex;
+        gap: 0.5rem;
+        flex: 1;
+    }
+    
+    .controls-right {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    /* 네비게이션 - 컴팩트하게 재디자인 */
     .nav-container {
         background: white;
         padding: 0;
         margin: 0 -1rem;
         border-bottom: 1px solid #e2e8f0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
     
     .nav-buttons {
         display: flex;
         justify-content: center;
         gap: 0;
-        max-width: 1200px;
+        max-width: 500px;
         margin: 0 auto;
     }
     
     .nav-btn {
         flex: 1;
-        max-width: 180px;
         background: transparent;
         border: none;
         color: #64748b;
-        padding: 1.5rem 1rem;
+        padding: 1rem 0.5rem;
         font-weight: 600;
-        font-size: 1rem;
+        font-size: 0.9rem;
         cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border-bottom: 3px solid transparent;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .nav-btn::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
-        transition: left 0.5s;
-    }
-    
-    .nav-btn:hover::before {
-        left: 100%;
+        transition: all 0.3s ease;
+        border-bottom: 2px solid transparent;
     }
     
     .nav-btn:hover {
         background: rgba(59, 130, 246, 0.05);
         color: #1e40af;
-        transform: translateY(-1px);
     }
     
     .nav-btn.active {
-        background: rgba(59, 130, 246, 0.08);
         color: #1e40af;
-        border-bottom: 3px solid #3b82f6;
+        border-bottom: 2px solid #3b82f6;
     }
     
-    /* 메트릭 카드 - 모던 머터리얼 디자인 */
-    .metric-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.5rem;
-        margin: 2rem 0;
+    /* 공지사항 배너 */
+    .announcement-banner {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        padding: 0.8rem 1.5rem;
+        margin: 0 -1rem 1.5rem -1rem;
+        border-radius: 0 0 12px 12px;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        font-weight: 500;
+        animation: slideDown 0.5s ease-out;
     }
     
-    .metric-card {
-        background: white;
-        color: #2d3748;
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        border: 1px solid #f1f5f9;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
+    @keyframes slideDown {
+        from {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
     }
     
-    .metric-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #3b82f6, #60a5fa);
-    }
-    
-    .metric-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 12px 40px rgba(0,0,0,0.15);
-        border-color: #e2e8f0;
-    }
-    
-    /* 버튼 스타일 - 모던 머터리얼 */
-    .stButton>button {
-        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 12px !important;
-        padding: 0.8rem 1.5rem !important;
-        font-weight: 600 !important;
-        font-size: 0.9rem !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
-        letter-spacing: 0.3px;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .stButton>button::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.5s;
-    }
-    
-    .stButton>button:hover::before {
-        left: 100%;
-    }
-    
-    .stButton>button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4) !important;
-        background: linear-gradient(135deg, #4f87f8 0%, #2d50c5 100%) !important;
-    }
-    
-    /* 보조 버튼 */
-    .stButton>button[kind="secondary"] {
-        background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
-        box-shadow: 0 2px 8px rgba(100, 116, 139, 0.2) !important;
-    }
-    
-    .stButton>button[kind="secondary"]:hover {
-        background: linear-gradient(135deg, #747b8a 0%, #565e6e 100%) !important;
-        box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3) !important;
-    }
-    
-    /* 입력 필드 - 모던한 디자인 */
-    .stTextInput>div>div>input,
-    .stNumberInput>div>div>input,
-    .stDateInput>div>div>input,
-    .stSelectbox>div>div>select {
-        background: white !important;
-        border: 2px solid #e2e8f0 !important;
-        border-radius: 12px !important;
-        padding: 0.8rem 1.2rem !important;
-        font-size: 1rem !important;
-        color: #2d3748 !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
-    }
-    
-    .stTextInput>div>div>input:focus,
-    .stNumberInput>div>div>input:focus,
-    .stDateInput>div>div>input:focus,
-    .stSelectbox>div>div>select:focus {
-        border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
-        background: white !important;
-    }
-    
-    /* 캡처 방지 배너 - 모던한 디자인 */
+    /* 캡처 방지 배너 */
     .capture-warning {
         background: linear-gradient(45deg, #dc2626, #b91c1c);
         color: white;
-        padding: 1.2rem;
+        padding: 0.8rem;
         text-align: center;
-        font-weight: 700;
-        font-size: 1.1rem;
-        margin: 0 -1rem 2rem -1rem;
-        border-bottom: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin: 0 -1rem 1.5rem -1rem;
         animation: alertPulse 3s ease-in-out infinite;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
     }
     
     .capture-warning::before {
@@ -422,26 +583,14 @@ def load_css():
         animation: shimmer 3s infinite;
     }
     
-    .security-alert {
-        background: linear-gradient(45deg, #d97706, #b45309);
-        color: white;
-        padding: 1rem;
-        text-align: center;
-        font-size: 0.95rem;
-        margin: 0 -1rem 1.5rem -1rem;
-        border-bottom: none;
-        animation: glow 4s ease-in-out infinite;
-        box-shadow: 0 2px 8px rgba(217, 119, 6, 0.3);
-    }
-    
     @keyframes alertPulse {
         0%, 100% { 
             opacity: 1;
-            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
         }
         50% { 
             opacity: 0.95;
-            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
         }
     }
     
@@ -450,67 +599,109 @@ def load_css():
         100% { left: 100%; }
     }
     
-    @keyframes glow {
-        0%, 100% { 
-            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.3);
-        }
-        50% { 
-            box-shadow: 0 4px 16px rgba(217, 119, 6, 0.5);
-        }
+    /* 메트릭 카드 */
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.2rem;
+        margin: 2rem 0;
     }
     
-    /* 이중 언어 표기 - 개선된 디자인 */
-    .bilingual {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-        padding: 1.2rem;
+    .metric-card {
         background: white;
-        border-radius: 12px;
-        border-left: 4px solid #3b82f6;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        transition: all 0.3s ease;
-    }
-    
-    .bilingual:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        transform: translateX(4px);
-    }
-    
-    .bilingual-jp {
-        font-weight: 600;
         color: #1e293b;
-        font-size: 1rem;
+        border-radius: 16px;
+        padding: 1.8rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        border: 1px solid #f1f5f9;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
     }
     
-    .bilingual-en {
-        font-size: 0.85rem;
-        color: #64748b;
-        font-weight: 500;
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
     }
     
-    /* 카드 컨테이너 */
+    .metric-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    /* 버튼 스타일 */
+    .stButton>button {
+        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 0.7rem 1.2rem !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+    }
+    
+    .stButton>button:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+    }
+    
+    /* 콘텐츠 카드 */
     .content-card {
         background: white;
-        border-radius: 20px;
+        border-radius: 16px;
         padding: 2rem;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
         border: 1px solid #f1f5f9;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     }
     
-    .content-card:hover {
-        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    /* 언어 스위처 컴팩트하게 */
+    .lang-btn {
+        background: rgba(255,255,255,0.15) !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.3) !important;
+        color: white !important;
+        border-radius: 8px !important;
+        padding: 0.4rem 1rem !important;
+        font-size: 0.8rem !important;
     }
     
-    /* 테이블 스타일 */
-    .dataframe {
-        border-radius: 16px !important;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important;
+    /* 로그아웃 버튼 */
+    .logout-btn {
+        background: rgba(239, 68, 68, 0.9) !important;
+        border: 1px solid rgba(255,255,255,0.3) !important;
+    }
+    
+    .logout-btn:hover {
+        background: rgba(220, 38, 38, 0.9) !important;
+    }
+    
+    /* 입력 필드 */
+    .stTextInput>div>div>input,
+    .stNumberInput>div>div>input,
+    .stDateInput>div>div>input,
+    .stSelectbox>div>div>select {
         background: white !important;
-        border: 1px solid #f1f5f9 !important;
+        border: 1.5px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 0.7rem 1rem !important;
+        font-size: 0.9rem !important;
+        color: #1e293b !important;
+    }
+    
+    .stTextInput>div>div>input:focus,
+    .stNumberInput>div>div>input:focus,
+    .stDateInput>div>div>input:focus,
+    .stSelectbox>div>div>select:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
     }
     
     /* 탭 스타일 */
@@ -521,91 +712,19 @@ def load_css():
     }
     
     .stTabs [data-baseweb="tab"] {
-        height: 60px;
-        white-space: pre-wrap;
-        background-color: transparent;
-        border-radius: 0px;
-        gap: 8px;
-        padding: 0 2rem;
+        height: 50px;
+        padding: 0 1.5rem;
         font-weight: 600;
         color: #64748b;
-        border-bottom: 3px solid transparent;
-        transition: all 0.3s ease;
+        border-bottom: 2px solid transparent;
     }
     
     .stTabs [aria-selected="true"] {
-        background-color: transparent !important;
         color: #1e40af !important;
-        border-bottom: 3px solid #3b82f6 !important;
-    }
-    
-    /* 언어 스위처 */
-    .lang-switcher {
-        display: flex;
-        gap: 8px;
-        justify-content: center;
-        margin: 1rem 0;
-    }
-    
-    .lang-btn {
-        background: rgba(255,255,255,0.2) !important;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.3) !important;
-        color: white !important;
-        border-radius: 20px !important;
-        padding: 0.5rem 1.5rem !important;
-    }
-    
-    .lang-btn:hover {
-        background: rgba(255,255,255,0.3) !important;
+        border-bottom: 2px solid #3b82f6 !important;
     }
     
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800&display=swap');
-    
-    /* 스크롤바 스타일 */
-    ::-webkit-scrollbar {
-        width: 8px;
-    }
-    
-    ::-webkit-scrollbar-track {
-        background: #f1f5f9;
-        border-radius: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-    }
-    
-    /* 애니메이션 효과 */
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .fade-in-up {
-        animation: fadeInUp 0.6s ease-out;
-    }
-    
-    /* 그리드 레이아웃 개선 */
-    .stColumn {
-        padding: 0.5rem;
-    }
-    
-    /* 프로그레스 바 */
-    .stProgress > div > div > div {
-        background: linear-gradient(90deg, #3b82f6, #60a5fa);
-    }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -620,11 +739,17 @@ def show_security_warnings():
         st.session_state.last_capture_warning = current_time
     else:
         st.markdown(f'<div class="capture-warning">{get_text("no_capture")}</div>', unsafe_allow_html=True)
-    
-    # 항상 보안 경고 표시
-    st.markdown(f'<div class="security-alert">{get_text("security_warning")}</div>', unsafe_allow_html=True)
 
-# 적금 계산 함수
+# 공지사항 배너
+def show_announcement():
+    st.markdown(f'''
+    <div class="announcement-banner">
+        <span>📢</span>
+        <span>{get_text("announcement_content")}</span>
+    </div>
+    ''', unsafe_allow_html=True)
+
+# 적금 계산 함수 (기존과 동일)
 def calculate_savings_schedule(monthly_amount, period_years, interest_rate, start_date, adjustments=None):
     total_months = period_years * 12
     monthly_interest_rate = interest_rate / 100 / 12
@@ -636,18 +761,15 @@ def calculate_savings_schedule(monthly_amount, period_years, interest_rate, star
     for month in range(1, total_months + 1):
         payment_date = start_date + relativedelta(months=month-1)
         
-        # 조정된 금액 확인
         actual_amount = monthly_amount
         adjustment_note = ""
         if adjustments and month in adjustments:
             actual_amount = adjustments[month]
             adjustment_note = f"調整済: ¥{adjustments[month]:,}"
         
-        # 이자 계산 (반올림)
         monthly_interest = round(current_balance * monthly_interest_rate)
         current_balance += actual_amount + monthly_interest
         
-        # 상태 결정 (오늘 기준)
         if payment_date < today:
             status = "✅ 入金完了"
         elif payment_date == today:
@@ -677,7 +799,7 @@ def calculate_savings_schedule(monthly_amount, period_years, interest_rate, star
         'completion_rate': len([x for x in schedule if '完了' in x['状態']]) / total_months * 100
     }
 
-# 급여 계산 함수
+# 급여 계산 함수 (기존과 동일)
 def calculate_salary(basic_salary, overtime_pay, income_tax, residence_tax, health_insurance, pension, employment_insurance, other_deduction):
     total_income = basic_salary + overtime_pay
     total_deductions = income_tax + residence_tax + health_insurance + pension + employment_insurance + other_deduction
@@ -731,13 +853,13 @@ def render_nav():
 # 홈 페이지
 def render_home():
     show_security_warnings()
+    show_announcement()
     
     st.markdown(f"## 👋 {get_text('welcome').format(st.session_state.user_data['name'])}")
     
     # 요약 메트릭
     st.markdown("### 📊 資産概要")
     
-    # 실제 데이터 계산
     total_savings = 0
     monthly_payment = 0
     active_plans = len(st.session_state.savings_list)
@@ -752,27 +874,27 @@ def render_home():
     with col1:
         st.markdown(f"""
         <div class="metric-card">
-            <div style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 1rem;">総積立額</div>
-            <div style="font-size: 2.2rem; font-weight: 700; margin-bottom: 0.5rem; color: #1e40af;">¥{total_savings:,.0f}</div>
-            <div style="font-size: 0.8rem; opacity: 0.6;">前月比 +2.3%</div>
+            <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 1rem;">総積立額</div>
+            <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; color: #1e40af;">¥{total_savings:,.0f}</div>
+            <div style="font-size: 0.75rem; opacity: 0.6;">前月比 +2.3%</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
         st.markdown(f"""
         <div class="metric-card">
-            <div style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 1rem;">月間支払額</div>
-            <div style="font-size: 2.2rem; font-weight: 700; margin-bottom: 0.5rem; color: #1e40af;">¥{monthly_payment:,.0f}</div>
-            <div style="font-size: 0.8rem; opacity: 0.6;">実行中プラン</div>
+            <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 1rem;">月間支払額</div>
+            <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; color: #1e40af;">¥{monthly_payment:,.0f}</div>
+            <div style="font-size: 0.75rem; opacity: 0.6;">実行中プラン</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col3:
         st.markdown(f"""
         <div class="metric-card">
-            <div style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 1rem;">実行中プラン</div>
-            <div style="font-size: 2.2rem; font-weight: 700; margin-bottom: 0.5rem; color: #1e40af;">{active_plans}</div>
-            <div style="font-size: 0.8rem; opacity: 0.6;">総プラン数</div>
+            <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 1rem;">実行中プラン</div>
+            <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; color: #1e40af;">{active_plans}</div>
+            <div style="font-size: 0.75rem; opacity: 0.6;">総プラン数</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -822,9 +944,10 @@ def render_home():
             st.session_state.current_page = 'payroll'
             st.rerun()
 
-# 적금 관리 페이지
+# 적금 관리 페이지 (기존과 동일)
 def render_savings():
     show_security_warnings()
+    show_announcement()
     
     st.markdown("## 💰 積立貯蓄管理")
     
@@ -834,8 +957,6 @@ def render_savings():
         st.markdown('<div class="content-card">', unsafe_allow_html=True)
         st.markdown("### 🆕 新規積立口座開設")
         
-        # 기본 정보 입력
-        st.markdown("#### 📝 基本情報")
         col1, col2 = st.columns(2)
         
         with col1:
@@ -850,7 +971,6 @@ def render_savings():
             interest_rate = st.number_input("年利率 (%)", min_value=0.1, value=2.5, step=0.1, format="%.1f")
             start_date = st.date_input("開始日", date(2025, 1, 1))
         
-        # 조정 입력
         st.markdown("#### ⚙️ 入金調整")
         st.info("特定の回で入金額を調整する場合は設定してください")
         
@@ -864,7 +984,6 @@ def render_savings():
                 st.session_state.adjustments.append({'month': new_month, 'amount': new_amount})
                 st.success(f"{new_month}回目を調整しました")
         
-        # 현재 조정 목록 표시
         if st.session_state.adjustments:
             st.markdown("**現在の調整内容:**")
             for i, adj in enumerate(st.session_state.adjustments):
@@ -878,11 +997,9 @@ def render_savings():
                         st.session_state.adjustments.pop(i)
                         st.rerun()
         
-        # 최종 생성 버튼
         if st.button("🚀 積立プラン作成", use_container_width=True, type="primary"):
             adjustments_dict = {adj['month']: adj['amount'] for adj in st.session_state.adjustments}
             
-            # 적금 계산
             calculation = calculate_savings_schedule(
                 monthly_amount, 
                 period, 
@@ -891,7 +1008,6 @@ def render_savings():
                 adjustments_dict
             )
             
-            # 새로운 적금 플랜 생성
             new_savings = {
                 'id': len(st.session_state.savings_list) + 1,
                 'name': savings_name,
@@ -922,7 +1038,6 @@ def render_savings():
                 with st.expander(f"📒 {savings['name']} - {savings['account_number']}", expanded=False):
                     st.markdown('<div class="content-card">', unsafe_allow_html=True)
                     
-                    # 기본 정보
                     st.markdown("#### 📋 基本情報")
                     col1, col2, col3, col4 = st.columns(4)
                     
@@ -939,7 +1054,6 @@ def render_savings():
                         st.markdown("**開始日**")
                         st.write(savings['start_date'])
                     
-                    # 적금 정보
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
                         st.markdown("**月間積立額**")
@@ -955,7 +1069,6 @@ def render_savings():
                         st.markdown("**進捗率**")
                         st.write(f"{completion:.1f}%")
                     
-                    # 계산 결과
                     calc = savings['calculation']
                     st.markdown("#### 計算結果")
                     col1, col2, col3, col4 = st.columns(4)
@@ -968,10 +1081,9 @@ def render_savings():
                     with col4:
                         st.metric("総月数", f"{calc['total_months']}")
                     
-                    # 입금 스케줄
                     st.markdown("#### 入金スケジュール")
                     schedule_data = []
-                    for item in savings['calculation']['schedule'][:12]:  # 처음 12개만 표시
+                    for item in savings['calculation']['schedule'][:12]:
                         schedule_data.append({
                             '回': item['回'],
                             '日付': item['入金日'],
@@ -985,16 +1097,16 @@ def render_savings():
                     schedule_df = pd.DataFrame(schedule_data)
                     st.dataframe(schedule_df, use_container_width=True, hide_index=True)
                     
-                    # 삭제 버튼
                     if st.button(f"🗑️ 削除", key=f"delete_{savings['id']}"):
                         st.session_state.savings_list = [s for s in st.session_state.savings_list if s['id'] != savings['id']]
                         st.rerun()
                     
                     st.markdown('</div>', unsafe_allow_html=True)
 
-# 급여 명세서 페이지
+# 급여 명세서 페이지 - HTML 다운로드 기능 추가
 def render_payroll():
     show_security_warnings()
+    show_announcement()
     
     st.markdown("## 📄 給与明細管理")
     
@@ -1018,11 +1130,11 @@ def render_payroll():
             other_deduction = st.number_input("控除額", value=10000, step=1000, key="other_deduction")
             payslip_date = st.date_input("給与日", datetime.now().date(), key="payslip_date")
         
-        if st.form_submit_button("📄 明細発行", use_container_width=True, type="primary"):
-            # 급여 계산
+        submitted = st.form_submit_button("📄 明細発行", use_container_width=True, type="primary")
+        
+        if submitted:
             salary_data = calculate_salary(basic_salary, overtime_pay, income_tax, residence_tax, health_insurance, pension, employment_insurance, other_deduction)
             
-            # 급여 명세서 저장
             new_payslip = {
                 'id': len(st.session_state.payroll_list) + 1,
                 'date': payslip_date.strftime('%Y/%m/%d'),
@@ -1032,7 +1144,6 @@ def render_payroll():
             
             st.session_state.payroll_list.append(new_payslip)
             
-            # 결과 표시
             st.success("🎉 給与明細が作成されました！")
             
             col1, col2, col3 = st.columns(3)
@@ -1043,7 +1154,21 @@ def render_payroll():
             with col3:
                 st.metric("差引支給額", f"¥{salary_data['net_salary']:,.0f}")
             
-            # 상세 내역
+            # HTML 다운로드 버튼
+            html_content = create_payslip_html(salary_data, payslip_date.strftime('%Y年%m月%d日'), st.session_state.user_data)
+            
+            # HTML 파일 다운로드 링크 생성
+            b64 = base64.b64encode(html_content.encode()).decode()
+            href = f'<a href="data:text/html;base64,{b64}" download="給与明細_{payslip_date.strftime("%Y%m%d")}.html" style="text-decoration: none;">'
+            st.markdown(
+                f'{href}'
+                f'<button style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 10px; font-weight: 600; cursor: pointer; margin-top: 1rem;">'
+                f'📥 給与明細をダウンロード（HTML形式）'
+                f'</button>'
+                f'</a>',
+                unsafe_allow_html=True
+            )
+            
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown("##### 支給内訳詳細")
@@ -1059,13 +1184,23 @@ def render_payroll():
 def login():
     st.markdown(f"""
     <div class="bank-header">
-        <h1 class="bank-title">{get_text('title')}</h1>
-        <p class="bank-subtitle">{get_text('subtitle')}</p>
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="bank-logo">
+                    <div class="logo-icon">🏦</div>
+                    <div class="logo-text">
+                        <h1 class="bank-title">{get_text('title')}</h1>
+                        <p class="bank-subtitle">{get_text('subtitle')}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
+        st.markdown('<div style="height: 2rem"></div>', unsafe_allow_html=True)
         st.markdown("### ログイン")
         with st.form("login_form"):
             user_id = st.text_input(get_text('login_id'), placeholder="otsuka")
@@ -1082,20 +1217,16 @@ def login():
 # 언어 전환
 def render_language_switcher():
     current_lang = st.session_state.language
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button("English", use_container_width=True, type="primary" if current_lang == 'EN' else "secondary"):
-            st.session_state.language = 'EN'
-            st.rerun()
-    with col2:
-        if st.button("日本語", use_container_width=True, type="primary" if current_lang == 'JP' else "secondary"):
-            st.session_state.language = 'JP'
-            st.rerun()
+    if st.button("English", key="lang_en", use_container_width=True, 
+                 type="primary" if current_lang == 'EN' else "secondary",
+                 help="Switch to English"):
+        st.session_state.language = 'EN'
+        st.rerun()
 
 # 로그아웃
 def render_logout():
-    if st.button(get_text('logout'), key="logout_btn", use_container_width=True):
+    if st.button(get_text('logout'), key="logout_btn", use_container_width=True,
+                 type="secondary", help="ログアウト"):
         st.session_state.logged_in = False
         st.rerun()
 
@@ -1107,23 +1238,31 @@ def main():
     if not st.session_state.logged_in:
         login()
     else:
-        # 헤더
+        # 새로 디자인된 헤더
         st.markdown(f"""
         <div class="bank-header">
-            <div style="display: flex; justify-content: space-between; align-items: center; position: relative;">
-                <div>
-                    <h1 class="bank-title">{get_text('title')}</h1>
-                    <p class="bank-subtitle">{get_text('subtitle')}</p>
-                    <p style="margin: 0; opacity: 0.95;">
-                        {get_text('welcome').format(st.session_state.user_data['name'])} | 
-                        {get_text('account_number')}: {st.session_state.user_data['account']}
-                    </p>
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="bank-logo">
+                        <div class="logo-icon">🏦</div>
+                        <div class="logo-text">
+                            <h1 class="bank-title">{get_text('title')}</h1>
+                            <p class="bank-subtitle">{get_text('subtitle')}</p>
+                        </div>
+                    </div>
+                    <div class="user-info">
+                        <div class="welcome-text">{get_text('welcome').format(st.session_state.user_data['name'])}</div>
+                        <div class="account-info">{get_text('account_number')}: {st.session_state.user_data['account']}</div>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <div style="display: flex; gap: 5px;">
+                
+                <div class="top-controls">
+                    <div class="controls-left">
                         {render_language_switcher()}
                     </div>
-                    {render_logout()}
+                    <div class="controls-right">
+                        {render_logout()}
+                    </div>
                 </div>
             </div>
         </div>
