@@ -1,5 +1,5 @@
 import streamlit as st
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 import pandas as pd
 import numpy as np
@@ -18,8 +18,6 @@ def initialize_session_state():
         st.session_state.logged_in = False
     if 'language' not in st.session_state:
         st.session_state.language = 'JP'
-    if 'theme' not in st.session_state:
-        st.session_state.theme = 'light'
     if 'current_page' not in st.session_state:
         st.session_state.current_page = 'home'
     
@@ -27,53 +25,18 @@ def initialize_session_state():
     if 'user_data' not in st.session_state:
         st.session_state.user_data = {
             "name": "山田 太郎",
-            "assets": {
-                "total": 15480230,
-                "deposits": 12045000,
-                "loans": 2560000,
-                "investments": 875230,
-                "savings": 3500000,
-                "credit_card": 125000
-            },
             "account": "098-96586-6521",
             "emp_num": "12345678",
-            "department": "IT事業部",
-            "join_date": "2020年4月"
+            "department": "IT事業部"
         }
     
-    # 급여명세서 데이터
-    if 'payslip_data' not in st.session_state:
-        st.session_state.payslip_data = {
-            "income_items": [
-                {"name": "基本給", "amount": 340000},
-                {"name": "役職手当", "amount": 50000},
-                {"name": "時間外手当", "amount": 25000},
-                {"name": "交通費", "amount": 15000}
-            ],
-            "deduction_items": [
-                {"name": "所得税", "amount": 26320},
-                {"name": "住民税", "amount": 6520},
-                {"name": "健康保険", "amount": 8910},
-                {"name": "厚生年金", "amount": 29960},
-                {"name": "雇用保険", "amount": 4550},
-                {"name": "その他控除", "amount": 70000}
-            ]
-        }
+    # 적금 데이터 저장소
+    if 'savings_list' not in st.session_state:
+        st.session_state.savings_list = []
     
-    # 적금 데이터
-    if 'savings_data' not in st.session_state:
-        st.session_state.savings_data = {
-            "name": "山田 太郎",
-            "emp_num": "12345678",
-            "account": "098-96586-6521",
-            "start_date": date(2025, 2, 25),
-            "unit_price": 1100,
-            "original_units": 4,
-            "current_units": 4,
-            "years": 3,
-            "interest": 10.03,
-            "adjustments": []
-        }
+    # 급여 데이터 저장소
+    if 'payroll_list' not in st.session_state:
+        st.session_state.payroll_list = []
 
 # 다국어 지원
 LANGUAGES = {
@@ -85,69 +48,53 @@ LANGUAGES = {
         'login': 'ログイン',
         'login_error': 'ログインIDまたはパスワードが正しくありません',
         'home': '🏠 ホーム',
-        'loan': '💰 積立管理',
+        'savings': '💰 積立管理',
         'payroll': '📄 給与明細',
         'welcome': 'ようこそ、{}様',
         'last_login': '最終ログイン',
         'account_number': '口座番号',
         'asset_overview': '資産概要',
-        'total_assets': '総資産',
-        'deposits': '普通預金',
-        'loans': 'ローン残高',
-        'investments': '投資資産',
-        'savings': '積立預金',
-        'credit_card': 'クレジット',
-        'recent_transactions': '最近の取引',
-        'financial_overview': '財務概要',
-        'quick_actions': 'クイックアクション',
-        'transfer': '振込',
-        'payment': '支払い',
-        'exchange': '為替',
-        'date': '日付',
-        'description': '取引内容',
-        'amount': '金額',
-        'counterparty': '取引先',
-        'status': '状態',
-        'income_breakdown': '支給内訳',
-        'deduction_breakdown': '控除内訳',
-        'basic_salary': '基本給',
-        'create_payslip': '明細作成',
-        'payslip_title': '給与明細書',
-        'total_income': '総支給額',
-        'total_deduction': '総控除額',
-        'net_pay': '差引支給額',
-        'savings_management': '積立貯蓄管理システム',
-        'savings_subtitle': 'Otsuka Shokai Savings Management System',
-        'customer_name': '顧客名',
-        'employee_number': '社員番号',
-        'account_number': '口座番号',
-        'start_date': '積立開始日',
-        'unit_price': '1口座金額 (¥)',
-        'units': '申込口座数',
-        'years': '満期期間 (年)',
-        'interest_rate': '年利率 (%)',
-        'register': '💾 登録',
-        'basic_info': '基本情報',
-        'maturity_date': '満期日',
-        'savings_overview': '積立概要',
-        'monthly_payment': '月々積立額',
-        'total_months': '総積立回数',
         'total_savings': '総積立額',
-        'estimated_interest': '予想利息',
-        'payment_schedule': '入金スケジュール',
-        'payment_date': '入金日',
-        'payment_amount': '入金額',
-        'cumulative_balance': '累計残高',
-        'interest': '利息',
-        'notes': '備考',
-        'logout': 'ログアウト',
-        'theme_light': 'ライトモード',
-        'theme_dark': 'ダークモード',
-        'view_details': '詳細を見る',
-        'monthly_trend': '月次推移',
-        'asset_allocation': '資産配分',
-        'transaction_history': '取引履歴',
-        'financial_analysis': '財務分析'
+        'active_plans': '実行中プラン',
+        'monthly_payment': '月間支払額',
+        'recent_transactions': '最近の取引',
+        'quick_access': 'クイックアクセス',
+        'new_savings': '新規積立作成',
+        'savings_calc': '積立計算機',
+        'view_savings': '積立一覧',
+        'date': '日付',
+        'description': '説明',
+        'amount': '金額',
+        'status': '状態',
+        'savings_management': '積立貯蓄管理',
+        'savings_name': '積立名',
+        'target_amount': '目標金額',
+        'monthly_amount': '月間積立額',
+        'period': '積立期間',
+        'start_date': '開始日',
+        'interest_rate': '年利率',
+        'calculate': '計算',
+        'create_plan': 'プラン作成',
+        'savings_details': '積立詳細',
+        'total_months': '総期間',
+        'total_payment': '総支払額',
+        'final_amount': '満期金額',
+        'expected_interest': '予想利息',
+        'payment_schedule': '支払いスケジュール',
+        'payroll_management': '給与明細管理',
+        'basic_salary': '基本給',
+        'overtime_pay': '時間外手当',
+        'bonus': 'ボーナス',
+        'allowances': 'その他手当',
+        'insurance': '社会保険料',
+        'tax': '税金',
+        'other_deductions': 'その他控除',
+        'net_salary': '差引支給額',
+        'generate_payslip': '明細発行',
+        'payslip_date': '給与日',
+        'income_items': '支給内訳',
+        'deduction_items': '控除内訳',
+        'logout': 'ログアウト'
     },
     'KR': {
         'title': '오츠카 은행 직원 포털',
@@ -157,69 +104,53 @@ LANGUAGES = {
         'login': '로그인',
         'login_error': '로그인 ID 또는 비밀번호가 올바르지 않습니다',
         'home': '🏠 홈',
-        'loan': '💰 적금 관리',
+        'savings': '💰 적금 관리',
         'payroll': '📄 급여 명세서',
         'welcome': '{}님, 환영합니다',
         'last_login': '최종 로그인',
         'account_number': '계좌번호',
         'asset_overview': '자산 현황',
-        'total_assets': '총 자산',
-        'deposits': '보통예금',
-        'loans': '대출 잔액',
-        'investments': '투자 자산',
-        'savings': '적금',
-        'credit_card': '신용카드',
-        'recent_transactions': '최근 거래 내역',
-        'financial_overview': '재무 개요',
-        'quick_actions': '빠른 실행',
-        'transfer': '송금',
-        'payment': '결제',
-        'exchange': '환전',
-        'date': '날짜',
-        'description': '거래 내용',
-        'amount': '금액',
-        'counterparty': '거래처',
-        'status': '상태',
-        'income_breakdown': '지급 내역',
-        'deduction_breakdown': '공제 내역',
-        'basic_salary': '기본급',
-        'create_payslip': '명세서 생성',
-        'payslip_title': '급여 명세서',
-        'total_income': '총 지급액',
-        'total_deduction': '총 공제액',
-        'net_pay': '차인 지급액',
-        'savings_management': '적금 관리 시스템',
-        'savings_subtitle': 'Otsuka Shokai Savings Management System',
-        'customer_name': '고객명',
-        'employee_number': '사원번호',
-        'account_number': '계좌번호',
-        'start_date': '적금 시작일',
-        'unit_price': '1구좌 금액 (¥)',
-        'units': '신청 구좌수',
-        'years': '만기 기간 (년)',
-        'interest_rate': '연이율 (%)',
-        'register': '💾 등록',
-        'basic_info': '기본 정보',
-        'maturity_date': '만기일',
-        'savings_overview': '적금 개요',
-        'monthly_payment': '월 납입액',
-        'total_months': '총 납입 횟수',
         'total_savings': '총 적금액',
-        'estimated_interest': '예상 이자',
+        'active_plans': '진행 중인 플랜',
+        'monthly_payment': '월 납입액',
+        'recent_transactions': '최근 거래',
+        'quick_access': '빠른 접근',
+        'new_savings': '새 적금 만들기',
+        'savings_calc': '적금 계산기',
+        'view_savings': '적금 목록',
+        'date': '날짜',
+        'description': '설명',
+        'amount': '금액',
+        'status': '상태',
+        'savings_management': '적금 관리',
+        'savings_name': '적금 이름',
+        'target_amount': '목표 금액',
+        'monthly_amount': '월 납입액',
+        'period': '적금 기간',
+        'start_date': '시작일',
+        'interest_rate': '연이율',
+        'calculate': '계산하기',
+        'create_plan': '플랜 생성',
+        'savings_details': '적금 상세',
+        'total_months': '총 기간',
+        'total_payment': '총 납입액',
+        'final_amount': '만기 금액',
+        'expected_interest': '예상 이자',
         'payment_schedule': '납입 일정',
-        'payment_date': '납입일',
-        'payment_amount': '납입액',
-        'cumulative_balance': '누적 잔액',
-        'interest': '이자',
-        'notes': '비고',
-        'logout': '로그아웃',
-        'theme_light': '라이트 모드',
-        'theme_dark': '다크 모드',
-        'view_details': '상세 보기',
-        'monthly_trend': '월별 추이',
-        'asset_allocation': '자산 배분',
-        'transaction_history': '거래 내역',
-        'financial_analysis': '재무 분석'
+        'payroll_management': '급여 명세서 관리',
+        'basic_salary': '기본급',
+        'overtime_pay': '초과근무수당',
+        'bonus': '상여금',
+        'allowances': '기타 수당',
+        'insurance': '사회보험료',
+        'tax': '세금',
+        'other_deductions': '기타 공제',
+        'net_salary': '실 수령액',
+        'generate_payslip': '명세서 생성',
+        'payslip_date': '급여일',
+        'income_items': '지급 내역',
+        'deduction_items': '공제 내역',
+        'logout': '로그아웃'
     }
 }
 
@@ -230,14 +161,13 @@ def get_text(key):
 def load_css():
     css = """
     <style>
-    /* 기본 스타일 */
     .stApp {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        font-family: 'Noto Sans JP', 'Malgun Gothic', 'Segoe UI', sans-serif;
+        font-family: 'Noto Sans JP', 'Malgun Gothic', sans-serif;
     }
     
     .main-container {
-        background: rgba(255, 255, 255, 0.95);
+        background: white;
         border-radius: 20px;
         margin: 20px;
         padding: 30px;
@@ -245,12 +175,6 @@ def load_css():
         min-height: calc(100vh - 40px);
     }
     
-    .dark-mode .main-container {
-        background: rgba(18, 18, 18, 0.95);
-        color: white;
-    }
-    
-    /* 헤더 스타일 */
     .bank-header {
         background: linear-gradient(135deg, #2c3e50, #34495e);
         color: white;
@@ -258,25 +182,6 @@ def load_css():
         border-radius: 15px;
         margin-bottom: 2rem;
         box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .bank-header::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-        background-size: 20px 20px;
-        animation: float 20s infinite linear;
-    }
-    
-    @keyframes float {
-        0% { transform: translate(0, 0) rotate(0deg); }
-        100% { transform: translate(-100px, -100px) rotate(360deg); }
     }
     
     .bank-title {
@@ -286,26 +191,8 @@ def load_css():
         background: linear-gradient(135deg, #fff, #f0f0f0);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }
     
-    .bank-subtitle {
-        font-size: 1.2rem !important;
-        opacity: 0.9;
-        font-weight: 300;
-    }
-    
-    /* 컨트롤 버튼 */
-    .header-controls {
-        position: absolute;
-        top: 1.5rem;
-        right: 2rem;
-        display: flex;
-        gap: 0.8rem;
-        z-index: 100;
-    }
-    
-    /* 네비게이션 */
     .nav-container {
         background: white;
         border-radius: 15px;
@@ -314,12 +201,6 @@ def load_css():
         box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         display: flex;
         gap: 1rem;
-        border: 1px solid rgba(0,0,0,0.05);
-    }
-    
-    .dark-mode .nav-container {
-        background: #2d3748;
-        border: 1px solid #4a5568;
     }
     
     .nav-btn {
@@ -334,71 +215,30 @@ def load_css():
         transition: all 0.3s ease;
     }
     
-    .dark-mode .nav-btn {
-        color: #cbd5e0;
-    }
-    
     .nav-btn.active {
         background: linear-gradient(135deg, #667eea, #764ba2);
         color: white;
         box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
     }
     
-    .nav-btn:hover:not(.active) {
-        background: rgba(102, 126, 234, 0.1);
-        color: #667eea;
-    }
-    
-    /* 카드 스타일 */
-    .asset-card {
-        background: linear-gradient(135deg, #fff, #f8f9fa);
-        border-radius: 15px;
-        padding: 1.5rem;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-        border: 1px solid rgba(0,0,0,0.05);
-        transition: all 0.3s ease;
-        height: 100%;
-    }
-    
-    .dark-mode .asset-card {
-        background: linear-gradient(135deg, #2d3748, #4a5568);
-        border: 1px solid #4a5568;
-    }
-    
-    .asset-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-    }
-    
-    .asset-value {
-        font-size: 2rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #2c3e50, #3498db);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin: 1rem 0;
-    }
-    
-    .dark-mode .asset-value {
-        background: linear-gradient(135deg, #fff, #cbd5e0);
-        -webkit-background-clip: text;
-    }
-    
-    /* 차트 컨테이너 */
-    .chart-container {
+    .card {
         background: white;
         border-radius: 15px;
         padding: 1.5rem;
         box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        border: 1px solid rgba(0,0,0,0.05);
         margin-bottom: 1.5rem;
     }
     
-    .dark-mode .chart-container {
-        background: #2d3748;
-        border: 1px solid #4a5568;
+    .metric-card {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
     }
     
-    /* 버튼 스타일 */
     .stButton>button {
         background: linear-gradient(135deg, #667eea, #764ba2) !important;
         color: white !important;
@@ -406,433 +246,433 @@ def load_css():
         border-radius: 10px !important;
         padding: 0.8rem 1.5rem !important;
         font-weight: 600 !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4) !important;
-    }
-    
-    .stButton>button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6) !important;
-    }
-    
-    /* 입력 필드 */
-    .stTextInput>div>div>input,
-    .stNumberInput>div>div>input,
-    .stDateInput>div>div>input,
-    .stSelectbox>div>div>select {
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        padding: 0.8rem 1rem !important;
-        font-size: 1rem !important;
-        background: white !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    .dark-mode .stTextInput>div>div>input,
-    .dark-mode .stNumberInput>div>div>input,
-    .dark-mode .stDateInput>div>div>input,
-    .dark-mode .stSelectbox>div>div>select {
-        background: #2d3748 !important;
-        border-color: #4a5568 !important;
-        color: white !important;
-    }
-    
-    .stTextInput>div>div>input:focus,
-    .stNumberInput>div>div>input:focus,
-    .stDateInput>div>div>input:focus,
-    .stSelectbox>div>div>select:focus {
-        border-color: #667eea !important;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
-    }
-    
-    /* 데이터프레임 */
-    .dataframe {
-        border-radius: 10px !important;
-        overflow: hidden !important;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
-    }
-    
-    /* 급여명세서 */
-    .paystub-container {
-        background: white;
-        border-radius: 15px;
-        padding: 2rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        border: 1px solid rgba(0,0,0,0.05);
-    }
-    
-    .dark-mode .paystub-container {
-        background: #2d3748;
-        border: 1px solid #4a5568;
-    }
-    
-    /* 유틸리티 */
-    .text-gradient {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 700;
-    }
-    
-    .progress-bar {
-        height: 8px;
-        background: #e2e8f0;
-        border-radius: 4px;
-        overflow: hidden;
-        margin: 0.5rem 0;
-    }
-    
-    .dark-mode .progress-bar {
-        background: #4a5568;
-    }
-    
-    .progress-fill {
-        height: 100%;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        border-radius: 4px;
     }
     
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Malgun+Gothic:wght@300;400;500;600;700&display=swap');
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
+
+# 적금 계산 함수
+def calculate_savings_plan(monthly_amount, period_years, interest_rate, start_date):
+    total_months = period_years * 12
+    monthly_rate = interest_rate / 100 / 12
     
-    # 다크모드 클래스 추가
-    if st.session_state.theme == 'dark':
-        st.markdown('<div class="dark-mode">', unsafe_allow_html=True)
+    schedule = []
+    current_balance = 0
+    
+    for month in range(1, total_months + 1):
+        payment_date = start_date + relativedelta(months=month-1)
+        
+        # 이자 계산
+        interest = current_balance * monthly_rate
+        current_balance += monthly_amount + interest
+        
+        schedule.append({
+            'month': month,
+            'date': payment_date.strftime('%Y/%m/%d'),
+            'payment': monthly_amount,
+            'interest': interest,
+            'balance': current_balance,
+            'status': '予定' if payment_date > datetime.now().date() else '完了'
+        })
+    
+    total_payment = monthly_amount * total_months
+    total_interest = current_balance - total_payment
+    
+    return {
+        'schedule': schedule,
+        'total_payment': total_payment,
+        'total_interest': total_interest,
+        'final_balance': current_balance,
+        'total_months': total_months
+    }
 
-def render_language_switcher():
-    current_lang = st.session_state.language
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        if current_lang == 'JP':
-            if st.button("🇰🇷 한국어", use_container_width=True, key="lang_switch"):
-                st.session_state.language = 'KR'
-                st.rerun()
-        else:
-            if st.button("🇯🇵 日本語", use_container_width=True, key="lang_switch"):
-                st.session_state.language = 'JP'
-                st.rerun()
-    return ""
+# 급여 계산 함수
+def calculate_salary(basic_salary, overtime_pay, bonus, allowances, insurance, tax, other_deductions):
+    total_income = basic_salary + overtime_pay + bonus + allowances
+    total_deductions = insurance + tax + other_deductions
+    net_salary = total_income - total_deductions
+    
+    return {
+        'total_income': total_income,
+        'total_deductions': total_deductions,
+        'net_salary': net_salary,
+        'income_breakdown': {
+            '基本給': basic_salary,
+            '時間外手当': overtime_pay,
+            'ボーナス': bonus,
+            'その他手当': allowances
+        },
+        'deduction_breakdown': {
+            '社会保険料': insurance,
+            '税金': tax,
+            'その他控除': other_deductions
+        }
+    }
 
-def render_theme_switcher():
-    current_theme = st.session_state.theme
-    with st.container():
-        if current_theme == 'light':
-            if st.button("🌙 다크모드", use_container_width=True, key="theme_switch"):
-                st.session_state.theme = 'dark'
-                st.rerun()
-        else:
-            if st.button("☀️ 라이트모드", use_container_width=True, key="theme_switch"):
-                st.session_state.theme = 'light'
-                st.rerun()
-    return ""
-
-def render_logout():
-    if st.button(get_text('logout'), key="logout_btn", use_container_width=True):
-        st.session_state.logged_in = False
-        st.rerun()
-    return ""
-
+# 네비게이션
 def render_nav():
     nav_items = [
         ('home', get_text('home')),
-        ('loan', get_text('loan')), 
+        ('savings', get_text('savings')), 
         ('payroll', get_text('payroll'))
     ]
     
     cols = st.columns(len(nav_items))
     for idx, (page, label) in enumerate(nav_items):
         with cols[idx]:
-            is_active = st.session_state.current_page == page
             if st.button(
                 label, 
                 use_container_width=True,
-                type="primary" if is_active else "secondary"
+                type="primary" if st.session_state.current_page == page else "secondary"
             ):
                 st.session_state.current_page = page
                 st.rerun()
 
-# 간단한 차트 생성 함수들
-def create_asset_trend_chart():
-    months = ['1月', '2月', '3月', '4月', '5月', '6月']
-    values = [14200000, 14500000, 14800000, 15000000, 15200000, 15480230]
+# 홈 페이지
+def render_home():
+    st.markdown(f"## {get_text('welcome').format(st.session_state.user_data['name'])}")
     
-    chart_data = pd.DataFrame({
-        '월': months,
-        '자산': values
-    })
+    # 요약 메트릭
+    col1, col2, col3 = st.columns(3)
     
-    st.area_chart(chart_data.set_index('월'), height=300)
-
-def create_asset_allocation_chart():
-    assets = st.session_state.user_data['assets']
-    labels = [get_text('deposits'), get_text('investments'), get_text('savings'), get_text('loans')]
-    values = [assets['deposits'], assets['investments'], assets['savings'], assets['loans']]
-    
-    chart_data = pd.DataFrame({
-        '카테고리': labels,
-        '금액': values
-    })
-    
-    st.bar_chart(chart_data.set_index('카테고리'), height=300)
-
-# 대시보드 - 자산 현황
-def render_dashboard():
-    st.markdown(f"### {get_text('asset_overview')}")
-    
-    assets = st.session_state.user_data['assets']
-    
-    # 자산 카드
-    col1, col2, col3, col4 = st.columns(4)
+    total_savings = sum(savings['monthly_amount'] * savings['period'] * 12 for savings in st.session_state.savings_list)
+    monthly_payment = sum(savings['monthly_amount'] for savings in st.session_state.savings_list)
+    active_plans = len(st.session_state.savings_list)
     
     with col1:
         st.markdown(f"""
-        <div class="asset-card">
-            <div style="color:#666; font-size:0.9rem;">{get_text('total_assets')}</div>
-            <div class="asset-value">¥{assets['total']:,}</div>
-            <div style="color:#27ae60; font-weight:600;">↗️ +2.3%</div>
+        <div class="metric-card">
+            <div style="font-size: 0.9rem; opacity: 0.9;">{get_text('total_savings')}</div>
+            <div style="font-size: 2rem; font-weight: 800;">¥{total_savings:,.0f}</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
         st.markdown(f"""
-        <div class="asset-card">
-            <div style="color:#666; font-size:0.9rem;">{get_text('deposits')}</div>
-            <div class="asset-value">¥{assets['deposits']:,}</div>
-            <div style="color:#666;">普通預金・定期預金</div>
+        <div class="metric-card">
+            <div style="font-size: 0.9rem; opacity: 0.9;">{get_text('monthly_payment')}</div>
+            <div style="font-size: 2rem; font-weight: 800;">¥{monthly_payment:,.0f}</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col3:
         st.markdown(f"""
-        <div class="asset-card">
-            <div style="color:#666; font-size:0.9rem;">{get_text('investments')}</div>
-            <div class="asset-value">¥{assets['investments']:,}</div>
-            <div style="color:#27ae60; font-weight:600;">↗️ +5.1%</div>
+        <div class="metric-card">
+            <div style="font-size: 0.9rem; opacity: 0.9;">{get_text('active_plans')}</div>
+            <div style="font-size: 2rem; font-weight: 800;">{active_plans}</div>
         </div>
         """, unsafe_allow_html=True)
     
-    with col4:
-        st.markdown(f"""
-        <div class="asset-card">
-            <div style="color:#666; font-size:0.9rem;">{get_text('savings')}</div>
-            <div class="asset-value">¥{assets['savings']:,}</div>
-            <div style="color:#666;">積立預金</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # 그래프와 트랜드
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        st.markdown(f"### {get_text('monthly_trend')}")
-        with st.container():
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-            create_asset_trend_chart()
-            st.markdown('</div>', unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown(f"### {get_text('asset_allocation')}")
-        with st.container():
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-            create_asset_allocation_chart()
-            st.markdown('</div>', unsafe_allow_html=True)
-    
-    # 빠른 액션 버튼
-    st.markdown(f"### {get_text('quick_actions')}")
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        if st.button("💰 송금하기", use_container_width=True, icon="💸"):
-            st.info("송금 기능은 곧 제공될 예정입니다.")
-    
-    with col2:
-        if st.button("📊 거래내역", use_container_width=True, icon="📈"):
-            st.session_state.current_page = 'loan'
-            st.rerun()
-    
-    with col3:
-        if st.button("🧾 명세서", use_container_width=True, icon="📄"):
-            st.session_state.current_page = 'payroll'
-            st.rerun()
-    
-    with col4:
-        if st.button("⚙️ 설정", use_container_width=True, icon="🔧"):
-            st.info("설정 페이지는 곧 제공될 예정입니다.")
-    
-    # 최근 거래
-    st.markdown(f"### {get_text('recent_transactions')}")
-    recent_transactions = [
-        ["2025/02/15", "給与振込", "¥340,000", "大塚銀行", "✅ 完了"],
-        ["2025/02/10", "家賃支払い", "¥120,000", "SMBCアパート", "✅ 完了"],
-        ["2025/02/05", "投資信託購入", "¥50,000", "大塚証券", "✅ 完了"],
-        ["2025/02/01", "公共料金", "¥24,500", "東京電力", "✅ 完了"],
-        ["2025/01/28", "カード決済", "¥18,700", "Amazon Japan", "✅ 完了"],
-    ]
-    
-    df_columns = [get_text('date'), get_text('description'), get_text('amount'), get_text('counterparty'), get_text('status')]
-    st.dataframe(
-        pd.DataFrame(recent_transactions, columns=df_columns),
-        use_container_width=True,
-        height=250
-    )
-
-# 적금 관리 페이지
-def render_savings_management():
-    st.markdown(f"## {get_text('savings_management')}")
-    st.markdown(f"*{get_text('savings_subtitle')}*")
-    
-    # 적금 정보 카드
+    # 빠른 접근
+    st.markdown(f"## {get_text('quick_access')}")
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.metric("월 납입액", "¥4,400")
+        if st.button(f"📈 {get_text('new_savings')}", use_container_width=True, height=100):
+            st.session_state.current_page = 'savings'
+            st.rerun()
     
     with col2:
-        st.metric("총 적금액", "¥158,400")
+        if st.button(f"🧮 {get_text('savings_calc')}", use_container_width=True, height=100):
+            st.session_state.current_page = 'savings'
+            st.rerun()
     
     with col3:
-        st.metric("예상 이자", "¥15,840")
+        if st.button(f"📋 {get_text('view_savings')}", use_container_width=True, height=100):
+            st.session_state.current_page = 'savings'
+            st.rerun()
     
-    # 적금 진행 상황
-    st.markdown("### 적금 진행률")
-    progress = 45  # 45% 진행
-    st.markdown(f"""
-    <div class="progress-bar">
-        <div class="progress-fill" style="width: {progress}%"></div>
-    </div>
-    <div style="text-align: center; margin-top: 0.5rem; font-weight: 600;">
-        {progress}% 완료 (18/36개월)
-    </div>
-    """, unsafe_allow_html=True)
+    # 최근 적금 플랜
+    if st.session_state.savings_list:
+        st.markdown(f"## {get_text('active_plans')}")
+        for savings in st.session_state.savings_list[-3:]:  # 최근 3개만 표시
+            with st.container():
+                col1, col2, col3 = st.columns([2,1,1])
+                with col1:
+                    st.write(f"**{savings['name']}**")
+                    st.write(f"월 ¥{savings['monthly_amount']:,.0f} · {savings['period']}년")
+                with col2:
+                    st.write(f"총 ¥{savings['monthly_amount'] * savings['period'] * 12:,.0f}")
+                with col3:
+                    st.write(f"시작: {savings['start_date']}")
+
+# 적금 관리 페이지
+def render_savings():
+    st.markdown(f"## {get_text('savings_management')}")
     
-    # 적금 상세 정보
-    st.markdown("### 적금 상세 정보")
-    savings_info = {
-        "적금 시작일": "2025년 2월 25일",
-        "만기일": "2028년 2월 25일",
-        "월 납입일": "매월 25일",
-        "적금 금액": "¥4,400",
-        "연이율": "10.03%",
-        "총 납입 횟수": "36회"
-    }
+    tab1, tab2, tab3 = st.tabs(["新規積立作成", "積立計算機", "積立一覧"])
     
-    for key, value in savings_info.items():
-        col1, col2 = st.columns([1, 2])
-        col1.write(f"**{key}**")
-        col2.write(value)
+    with tab1:
+        st.subheader("新規積立プラン作成")
+        
+        with st.form("new_savings_plan"):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                savings_name = st.text_input(get_text('savings_name'), "マイ積立プラン")
+                monthly_amount = st.number_input(get_text('monthly_amount'), min_value=1000, value=50000, step=1000)
+                period = st.selectbox(get_text('period'), [1, 2, 3, 5, 10], index=2)
+            
+            with col2:
+                start_date = st.date_input(get_text('start_date'), datetime.now().date())
+                interest_rate = st.number_input(get_text('interest_rate'), min_value=0.0, value=2.5, step=0.1)
+                target_amount = st.number_input(get_text('target_amount'), min_value=0, value=0)
+            
+            if st.form_submit_button(get_text('create_plan')):
+                # 적금 계산
+                calculation = calculate_savings_plan(monthly_amount, period, interest_rate, start_date)
+                
+                # 새로운 적금 플랜 생성
+                new_savings = {
+                    'id': len(st.session_state.savings_list) + 1,
+                    'name': savings_name,
+                    'monthly_amount': monthly_amount,
+                    'period': period,
+                    'start_date': start_date.strftime('%Y/%m/%d'),
+                    'interest_rate': interest_rate,
+                    'target_amount': target_amount,
+                    'calculation': calculation,
+                    'created_at': datetime.now().strftime('%Y/%m/%d %H:%M')
+                }
+                
+                st.session_state.savings_list.append(new_savings)
+                st.success(f"積立プラン '{savings_name}' が作成されました！")
+                st.rerun()
+    
+    with tab2:
+        st.subheader("積立計算機")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            calc_monthly = st.number_input("月間積立額", min_value=1000, value=50000, step=1000, key="calc_monthly")
+            calc_period = st.selectbox("積立期間", [1, 2, 3, 5, 10], index=2, key="calc_period")
+        
+        with col2:
+            calc_interest = st.number_input("年利率 (%)", min_value=0.0, value=2.5, step=0.1, key="calc_interest")
+            calc_start = st.date_input("開始日", datetime.now().date(), key="calc_start")
+        
+        if st.button(get_text('calculate')):
+            result = calculate_savings_plan(calc_monthly, calc_period, calc_interest, calc_start)
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("総支払額", f"¥{result['total_payment']:,.0f}")
+            with col2:
+                st.metric("予想利息", f"¥{result['total_interest']:,.0f}")
+            with col3:
+                st.metric("満期金額", f"¥{result['final_balance']:,.0f}")
+            with col4:
+                st.metric("総期間", f"{result['total_months']}ヶ月")
+            
+            # 상세 스케줄
+            st.subheader("支払いスケジュール (最初の12ヶ月)")
+            schedule_df = pd.DataFrame(result['schedule'][:12])
+            st.dataframe(schedule_df, use_container_width=True)
+    
+    with tab3:
+        st.subheader("積立プラン一覧")
+        
+        if not st.session_state.savings_list:
+            st.info("登録されている積立プランがありません。")
+        else:
+            for savings in st.session_state.savings_list:
+                with st.expander(f"{savings['name']} - ¥{savings['monthly_amount']:,.0f}/月", expanded=False):
+                    col1, col2, col3, col4 = st.columns(4)
+                    
+                    with col1:
+                        st.write("**月間積立額**")
+                        st.write(f"¥{savings['monthly_amount']:,.0f}")
+                    
+                    with col2:
+                        st.write("**積立期間**")
+                        st.write(f"{savings['period']}年")
+                    
+                    with col3:
+                        st.write("**開始日**")
+                        st.write(savings['start_date'])
+                    
+                    with col4:
+                        st.write("**年利率**")
+                        st.write(f"{savings['interest_rate']}%")
+                    
+                    # 계산 결과 표시
+                    calc = savings['calculation']
+                    st.write("**計算結果**")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("総支払額", f"¥{calc['total_payment']:,.0f}")
+                    with col2:
+                        st.metric("予想利息", f"¥{calc['total_interest']:,.0f}")
+                    with col3:
+                        st.metric("満期金額", f"¥{calc['final_balance']:,.0f}")
+                    
+                    # 삭제 버튼
+                    if st.button(f"削除", key=f"delete_{savings['id']}"):
+                        st.session_state.savings_list = [s for s in st.session_state.savings_list if s['id'] != savings['id']]
+                        st.rerun()
 
 # 급여 명세서 페이지
 def render_payroll():
-    st.markdown(f"## {get_text('payslip_title')}")
+    st.markdown(f"## {get_text('payroll_management')}")
     
-    payslip = st.session_state.payslip_data
-    total_income = sum(item["amount"] for item in payslip["income_items"])
-    total_deduction = sum(item["amount"] for item in payslip["deduction_items"])
-    net_pay = total_income - total_deduction
+    with st.form("payroll_form"):
+        st.subheader("給与情報入力")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### 支給内訳")
+            basic_salary = st.number_input(get_text('basic_salary'), value=300000, step=10000)
+            overtime_pay = st.number_input(get_text('overtime_pay'), value=50000, step=5000)
+            bonus = st.number_input(get_text('bonus'), value=0, step=10000)
+            allowances = st.number_input(get_text('allowances'), value=15000, step=1000)
+        
+        with col2:
+            st.markdown("#### 控除内訳")
+            insurance = st.number_input(get_text('insurance'), value=45000, step=1000)
+            tax = st.number_input(get_text('tax'), value=35000, step=1000)
+            other_deductions = st.number_input(get_text('other_deductions'), value=10000, step=1000)
+            payslip_date = st.date_input(get_text('payslip_date'), datetime.now().date())
+        
+        if st.form_submit_button(get_text('generate_payslip')):
+            # 급여 계산
+            salary_data = calculate_salary(basic_salary, overtime_pay, bonus, allowances, insurance, tax, other_deductions)
+            
+            # 급여 명세서 저장
+            new_payslip = {
+                'id': len(st.session_state.payroll_list) + 1,
+                'date': payslip_date.strftime('%Y/%m/%d'),
+                'salary_data': salary_data,
+                'created_at': datetime.now().strftime('%Y/%m/%d %H:%M')
+            }
+            
+            st.session_state.payroll_list.append(new_payslip)
+            
+            # 결과 표시
+            st.success("給与明細が作成されました！")
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("総支給額", f"¥{salary_data['total_income']:,.0f}")
+            with col2:
+                st.metric("総控除額", f"¥{salary_data['total_deductions']:,.0f}")
+            with col3:
+                st.metric("差引支給額", f"¥{salary_data['net_salary']:,.0f}")
+            
+            # 상세 내역
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("##### 支給内訳詳細")
+                for item, amount in salary_data['income_breakdown'].items():
+                    st.write(f"{item}: ¥{amount:,.0f}")
+            
+            with col2:
+                st.markdown("##### 控除内訳詳細")
+                for item, amount in salary_data['deduction_breakdown'].items():
+                    st.write(f"{item}: ¥{amount:,.0f}")
     
-    # 급여 요약
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.metric("총 지급액", f"¥{total_income:,}")
-    
-    with col2:
-        st.metric("총 공제액", f"¥{total_deduction:,}")
-    
-    with col3:
-        st.metric("실 수령액", f"¥{net_pay:,}", delta="정상")
-    
-    # 지급 내역
-    st.markdown(f"### {get_text('income_breakdown')}")
-    income_df = pd.DataFrame(payslip["income_items"])
-    st.dataframe(income_df, use_container_width=True)
-    
-    # 공제 내역
-    st.markdown(f"### {get_text('deduction_breakdown')}")
-    deduction_df = pd.DataFrame(payslip["deduction_items"])
-    st.dataframe(deduction_df, use_container_width=True)
+    # 저장된 급여 명세서 목록
+    if st.session_state.payroll_list:
+        st.markdown("## 保存された給与明細")
+        for payslip in st.session_state.payroll_list[-5:]:  # 최근 5개만 표시
+            with st.expander(f"給与明細 - {payslip['date']}", expanded=False):
+                data = payslip['salary_data']
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("総支給額", f"¥{data['total_income']:,.0f}")
+                with col2:
+                    st.metric("総控除額", f"¥{data['total_deductions']:,.0f}")
+                with col3:
+                    st.metric("差引支給額", f"¥{data['net_salary']:,.0f}")
 
 # 로그인 페이지
 def login():
-    st.markdown(f"""
-    <div class="bank-header">
-        <div class="header-controls">
-            {render_language_switcher()}
-            {render_theme_switcher()}
-        </div>
-        <h1 class="bank-title">{get_text('title')}</h1>
-        <p class="bank-subtitle">{get_text('subtitle')}</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        with st.container():
-            st.markdown("### ログイン")
-            with st.form("login_form"):
-                user_id = st.text_input(get_text('login_id'), placeholder="otsuka")
-                password = st.text_input(get_text('password'), type="password", placeholder="bank1234")
-                
-                if st.form_submit_button(get_text('login'), use_container_width=True):
-                    if user_id == "otsuka" and password == "bank1234":
-                        st.session_state.logged_in = True
-                        st.session_state.current_page = 'home'
-                        st.rerun()
-                    else:
-                        st.error(get_text('login_error'))
+        st.markdown(f"""
+        <div class="bank-header">
+            <h1 class="bank-title">{get_text('title')}</h1>
+            <p class="bank-subtitle">{get_text('subtitle')}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        with st.form("login_form"):
+            st.subheader("ログイン")
+            user_id = st.text_input(get_text('login_id'), placeholder="otsuka")
+            password = st.text_input(get_text('password'), type="password", placeholder="bank1234")
+            
+            if st.form_submit_button(get_text('login'), use_container_width=True):
+                if user_id == "otsuka" and password == "bank1234":
+                    st.session_state.logged_in = True
+                    st.session_state.current_page = 'home'
+                    st.rerun()
+                else:
+                    st.error(get_text('login_error'))
 
 # 메인 앱
 def main():
     initialize_session_state()
     load_css()
     
-    # 메인 컨테이너 시작
     st.markdown('<div class="main-container">', unsafe_allow_html=True)
     
     if not st.session_state.logged_in:
         login()
     else:
         # 헤더
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            st.markdown(f"""
-            <div class="bank-header">
-                <h1 class="bank-title">{get_text('title')}</h1>
-                <p class="bank-subtitle">{get_text('subtitle')}</p>
-                <div style="margin-top: 1rem;">
-                    <h3 style="margin:0; font-weight:300;">{get_text('welcome').format(st.session_state.user_data['name'])}</h3>
-                    <p style="margin:0; opacity:0.8;">{st.session_state.user_data['department']} | {get_text('account_number')}: {st.session_state.user_data['account']}</p>
+        st.markdown(f"""
+        <div class="bank-header">
+            <div style="display: flex; justify-content: between; align-items: start;">
+                <div>
+                    <h1 class="bank-title">{get_text('title')}</h1>
+                    <p class="bank-subtitle">{get_text('subtitle')}</p>
+                    <p style="margin: 0; opacity: 0.9;">
+                        {get_text('welcome').format(st.session_state.user_data['name'])} | 
+                        {get_text('account_number')}: {st.session_state.user_data['account']}
+                    </p>
+                </div>
+                <div style="margin-left: auto;">
+                    {render_language_switcher()}
+                    {render_logout()}
                 </div>
             </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown('<div class="header-controls">', unsafe_allow_html=True)
-            render_language_switcher()
-            render_theme_switcher()
-            render_logout()
-            st.markdown('</div>', unsafe_allow_html=True)
+        </div>
+        """, unsafe_allow_html=True)
         
         # 네비게이션
         render_nav()
         
         # 페이지 내용
         if st.session_state.current_page == 'home':
-            render_dashboard()
-        elif st.session_state.current_page == 'loan':
-            render_savings_management()
+            render_home()
+        elif st.session_state.current_page == 'savings':
+            render_savings()
         elif st.session_state.current_page == 'payroll':
             render_payroll()
     
-    # 메인 컨테이너 종료
     st.markdown('</div>', unsafe_allow_html=True)
-    
-    # 다크모드 클래스 종료
-    if st.session_state.theme == 'dark':
-        st.markdown('</div>', unsafe_allow_html=True)
+
+def render_language_switcher():
+    current_lang = st.session_state.language
+    if current_lang == 'JP':
+        if st.button("🇰🇷 한국어", key="lang_switch"):
+            st.session_state.language = 'KR'
+            st.rerun()
+    else:
+        if st.button("🇯🇵 日本語", key="lang_switch"):
+            st.session_state.language = 'JP'
+            st.rerun()
+    return ""
+
+def render_logout():
+    if st.button(get_text('logout'), key="logout_btn"):
+        st.session_state.logged_in = False
+        st.rerun()
+    return ""
 
 if __name__ == "__main__":
     main()
