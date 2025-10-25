@@ -515,7 +515,7 @@ def render_language_switcher():
             st.session_state.language = 'KR'
             st.rerun()
     else:
-        if st.button("🇯🇵 日本語", key="lang_switch", help"Switch to Japanese"):
+        if st.button("🇯🇵 日本語", key="lang_switch", help="Switch to Japanese"):
             st.session_state.language = 'JP'
             st.rerun()
     return ""
