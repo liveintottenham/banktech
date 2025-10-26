@@ -1,4 +1,4 @@
-# pages/1_🏠_Home.py
+# pages/1_🏠_Home.py (수정된 부분만 표시)
 import streamlit as st
 import pandas as pd
 import random
@@ -35,7 +35,7 @@ def generate_recent_transactions():
     return transactions
 
 def main():
-    # 공통 레이아웃 적용 - 이제 모든 페이지에서 CSS가 적용됩니다
+    # 공통 레이아웃 적용
     main_layout()
     show_security_warnings()
     show_announcement()
@@ -150,7 +150,10 @@ def main():
         else:
             st.info("積立プランがありません / No savings plans")
     
-    # 최근 거래 내역
+    # 섹션 간격 추가
+    st.markdown('<div class="transaction-section-spacing"></div>', unsafe_allow_html=True)
+    
+    # 최근 거래 내역 - 간격 조정
     st.markdown(f"### 💳 {get_text('recent_transactions')}")
     transactions = generate_recent_transactions()
     
@@ -164,7 +167,8 @@ def main():
             amount_color = "#ef4444" if transaction['type'] in ['引き出し', '振込'] else "#10b981"
             st.markdown(f"<div style='color: {amount_color}; text-align: right; font-weight: 600;'>{transaction['amount']}</div>", unsafe_allow_html=True)
         
-        st.divider()
+        # 간격 조정
+        st.markdown('<div class="compact-transaction"></div>', unsafe_allow_html=True)
 
 # 페이지 실행
 main()
