@@ -18,7 +18,7 @@ LANGUAGES = {
         'login': 'Login / ログイン',
         'login_error': 'Incorrect Login ID or Password / ログインIDまたはパスワードが正しくありません',
         'welcome': 'Welcome, {}',
-        'logout': 'Logout / ログアウト',
+        'logout': 'Logout / ログアウ트',
         'no_capture': '⚠️ SCREEN CAPTURE AND PHOTOGRAPHY PROHIBITED / この画面のスクリーンショット・撮影は禁止されています',
         'security_warning': '🔒 SECURITY WARNING: THIS PAGE IS MONITORED / セキュリティ警告: このページは監視されています',
         'announcement': '📢 Announcement / お知らせ',
@@ -43,7 +43,7 @@ LANGUAGES = {
         'adjustment_amount': 'Adjustment Amount (¥) / 調整金額 (¥)',
         'create_savings_plan': 'Create Savings Plan / 積立プラン作成',
         'basic_info': 'Basic Information / 基本情報',
-        'savings_details': 'Savings Details / 積立詳細',
+        'savings_details': 'Saving Details / 積立詳細',
         'calculation_results': 'Calculation Results / 計算結果',
         'total_payment': 'Total Payment / 総支払額',
         'total_interest': 'Total Interest / 総利息',
@@ -175,8 +175,8 @@ def load_css():
     .bank-header {
         background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
         color: white;
-        padding: 1.5rem 0 1rem 0;
-        margin: -1rem -1rem 2rem -1rem;
+        padding: 1.5rem 0 0.5rem 0;
+        margin: -1rem -1rem 1rem -1rem;
         box-shadow: 0 4px 20px rgba(30, 58, 138, 0.3);
         position: relative;
         overflow: hidden;
@@ -205,7 +205,7 @@ def load_css():
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
     }
     
     .bank-logo {
@@ -247,17 +247,70 @@ def load_css():
         border: 1px solid rgba(255,255,255,0.2);
     }
     
-    /* 상단 컨트롤 */
+    /* 상단 컨트롤 - 개선된 레이아웃 */
     .top-controls {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin: 0.5rem 0 0 0;
+        margin: 0;
         gap: 1rem;
-        padding: 0.8rem 1.5rem;
+        padding: 0.8rem 2rem;
         background: rgba(255,255,255,0.08);
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.15);
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .controls-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex: 1;
+    }
+    
+    .controls-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .control-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(255,255,255,0.15);
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.2);
+        color: white;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .control-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        color: #1e293b;
+        font-size: 0.9rem;
+        font-weight: 500;
+        background: rgba(255,255,255,0.9);
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+    
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .status-online {
+        background: #dcfce7;
+        color: #166534;
     }
     
     /* 캡처 금지 경고 - 둥글게 */
@@ -268,7 +321,7 @@ def load_css():
         text-align: center;
         font-weight: 800;
         font-size: 1.1rem;
-        margin: -2rem -1rem 1rem -1rem;
+        margin: 0 -1rem 0 -1rem;
         animation: pulse 2s infinite;
         border-radius: 0 0 20px 20px;
     }
@@ -300,13 +353,33 @@ def load_css():
         font-size: 1.1rem;
     }
     
-    /* 공지사항 섹션 */
-    .announcements-container {
-        background: linear-gradient(135deg, #ffffff, #fafafa);
+    /* 공지사항 섹션 - 개선된 디자인 */
+    .announcements-section {
+        background: white;
         border-radius: 12px;
         padding: 1.5rem;
         border: 1px solid #e2e8f0;
-        margin-bottom: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        position: relative;
+    }
+    
+    .announcements-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #3b82f6, #10b981);
+        border-radius: 12px 12px 0 0;
+    }
+    
+    .section-divider {
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+        margin: 2rem -1rem;
+        border: none;
     }
     
     .announcement-item {
@@ -358,21 +431,6 @@ def load_css():
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         border: 1px solid #e2e8f0;
         margin-bottom: 1rem;
-    }
-    
-    .status-indicator {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.3rem 0.8rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-    }
-    
-    .status-online {
-        background: #dcfce7;
-        color: #166534;
     }
     
     @keyframes pulse {
@@ -459,41 +517,61 @@ def main_layout():
     </div>
     """, unsafe_allow_html=True)
     
-    # 상단 컨트롤
+    # 상단 컨트롤 - 개선된 레이아웃
     st.markdown('<div class="top-controls">', unsafe_allow_html=True)
     
-    col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
+    # 왼쪽 컨트롤 그룹
+    st.markdown('<div class="controls-left">', unsafe_allow_html=True)
+    
+    col1, col2 = st.columns([1, 1])
     
     with col1:
+        # 언어 전환 버튼
         current_lang = st.session_state.language
         if st.button("🌐 English / 日本語", key="lang_switcher", use_container_width=True,
                     type="primary" if current_lang == 'EN' else "secondary"):
             st.session_state.language = 'EN' if current_lang == 'JP' else 'JP'
             st.rerun()
     
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # 오른쪽 컨트롤 그룹
+    st.markdown('<div class="controls-right">', unsafe_allow_html=True)
+    
     with col2:
-        st.markdown("""
-        <div class="status-indicator status-online">
-            <div style="width: 8px; height: 8px; background: #16a34a; border-radius: 50%;"></div>
-            Online / オンライン
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        current_time = datetime.now().strftime("%Y/%m/%d %H:%M")
-        st.markdown(f"""
-        <div style="display: flex; align-items: center; gap: 0.5rem; color: white;">
-            <span>📅</span>
-            <span>{current_time}</span>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col4:
-        if st.button(get_text('logout'), key="logout_btn", use_container_width=True, type="secondary"):
-            st.session_state.logged_in = False
-            st.rerun()
+        # 상태와 시간을 포함한 정보 그룹
+        col2_1, col2_2, col2_3 = st.columns([1, 1, 1])
+        
+        with col2_1:
+            # 온라인 상태 표시
+            st.markdown("""
+            <div class="status-indicator status-online">
+                <div style="width: 8px; height: 8px; background: #16a34a; border-radius: 50%;"></div>
+                Online / オンライン
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2_2:
+            # 현재 시간 (검정색으로 변경)
+            current_time = datetime.now().strftime("%Y/%m/%d %H:%M")
+            st.markdown(f"""
+            <div class="control-info">
+                <span>📅</span>
+                <span style="color: #1e293b;">{current_time}</span>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2_3:
+            # 로그아웃 버튼
+            if st.button(get_text('logout'), key="logout_btn", use_container_width=True, type="secondary"):
+                st.session_state.logged_in = False
+                st.rerun()
     
     st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # 구분선 추가
+    st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
 
 def show_security_warnings():
     """보안 경고 표시"""
@@ -535,7 +613,8 @@ def show_announcement():
     
     st.markdown("### 📢 お知らせ / Announcements")
     
-    st.markdown('<div class="announcements-container">', unsafe_allow_html=True)
+    # 공지사항 섹션에 새로운 클래스 적용
+    st.markdown('<div class="announcements-section">', unsafe_allow_html=True)
     
     for announcement in announcements:
         priority_color = {
