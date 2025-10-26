@@ -271,40 +271,63 @@ def load_css():
         margin: 0 !important;
     }
     
-    /* 강력한 플래시 효과 - 캡처 경고만 */
-    .capture-warning {
-        background: linear-gradient(45deg, #ef4444, #dc2626, #b91c1c);
-        color: white;
-        padding: 1rem;
-        text-align: center;
-        font-weight: 800;
-        font-size: 1.1rem;
-        margin: 0 -1rem 0 -1rem;
-        border-radius: 0 0 16px 16px;
-        backdrop-filter: blur(10px);
-        animation: strongPulse 1.5s infinite;
-        text-shadow: 0 0 10px rgba(255,255,255,0.5);
-        border-bottom: 3px solid #fff;
+    /* 구분선 간격 줄이기 */
+    .section-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+        margin: 1rem 0;
+        border: none;
     }
     
-    /* 일반 보안 경고 - 플래시 없음 */
-    .security-normal {
-        background: linear-gradient(135deg, #d97706, #b45309);
+    /* 일반 네모도형에 둥근 모서리의 캡처 경고 */
+    .capture-warning {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
         color: white;
-        padding: 0.8rem 2rem;
+        padding: 1rem 2rem;
         text-align: center;
         font-weight: 700;
         font-size: 1rem;
-        margin: 0 -1rem 2rem -1rem;
-        border-radius: 0 0 12px 12px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.2);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        margin: 0 0 1rem 0;
+        border-radius: 12px;
+        animation: strongPulse 1.5s infinite;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        border: 1px solid rgba(255,255,255,0.3);
     }
     
-    /* 모던한 공지사항 */
-    .announcement-modern {
+    /* 일반 보안 경고 */
+    .security-normal {
+        background: linear-gradient(135deg, #d97706, #b45309);
+        color: white;
+        padding: 1rem 2rem;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin: 0 0 2rem 0;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+    
+    /* 가로 배치 공지사항 */
+    .announcement-horizontal {
+        display: flex;
+        gap: 1rem;
         margin-bottom: 2rem;
+    }
+    
+    .announcement-card {
+        flex: 1;
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        transition: all 0.3s ease;
+    }
+    
+    .announcement-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
     }
     
     .announcement-header {
@@ -317,29 +340,6 @@ def load_css():
         display: flex;
         align-items: center;
         gap: 0.5rem;
-    }
-    
-    .announcement-item {
-        padding: 1.25rem;
-        margin-bottom: 1rem;
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #f1f5f9;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        transition: all 0.3s ease;
-    }
-    
-    .announcement-item:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        transform: translateY(-1px);
-    }
-    
-    /* 구분선 */
-    .section-divider {
-        height: 1px;
-        background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
-        margin: 2rem 0;
-        border: none;
     }
     
     /* 모던한 카드 */
@@ -390,13 +390,13 @@ def load_css():
     @keyframes strongPulse {
         0%, 100% { 
             opacity: 1;
-            box-shadow: 0 0 25px rgba(239, 68, 68, 0.6);
-            background: linear-gradient(45deg, #ef4444, #dc2626, #b91c1c);
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.5);
+            background: linear-gradient(135deg, #ef4444, #dc2626);
         }
         50% { 
-            opacity: 0.8;
-            box-shadow: 0 0 40px rgba(239, 68, 68, 0.9);
-            background: linear-gradient(45deg, #dc2626, #b91c1c, #991b1b);
+            opacity: 0.9;
+            box-shadow: 0 6px 25px rgba(239, 68, 68, 0.7);
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
         }
     }
     
@@ -559,12 +559,12 @@ def main_layout():
     st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
 
 def show_security_warnings():
-    """보안 경고 표시 - 캡처 경고만 플래시, 보안 경고는 일반"""
+    """보안 경고 표시 - 캡처 경고만 플래시, 둘 다 일반 네모도형"""
     st.markdown(f'<div class="capture-warning">{get_text("no_capture")}</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="security-normal">{get_text("security_warning")}</div>', unsafe_allow_html=True)
 
 def show_announcement():
-    """모던한 공지사항 표시"""
+    """가로 배치 공지사항 표시"""
     announcements = [
         {
             "icon": "🔧",
@@ -589,19 +589,23 @@ def show_announcement():
         }
     ]
     
-    st.markdown('<div class="announcement-modern fade-in-up">', unsafe_allow_html=True)
     st.markdown(f'<div class="announcement-header">📢 {get_text("announcement")}</div>', unsafe_allow_html=True)
+    
+    # 가로 배치 공지사항
+    st.markdown('<div class="announcement-horizontal">', unsafe_allow_html=True)
     
     for announcement in announcements:
         st.markdown(f"""
-        <div class="announcement-item">
-            <div style="display: flex; align-items: flex-start; gap: 1rem;">
-                <div style="font-size: 1.5rem; margin-top: 0.1rem;">{announcement['icon']}</div>
+        <div class="announcement-card">
+            <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem;">
+                <div style="font-size: 1.8rem;">{announcement['icon']}</div>
                 <div style="flex: 1;">
-                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 0.5rem; font-size: 1.1rem;">{announcement['title']}</div>
-                    <div style="color: #475569; margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.4;">{announcement['content']}</div>
-                    <div style="font-size: 0.85rem; color: #64748b; font-weight: 500;">{announcement['date']}</div>
+                    <div style="font-weight: 600; color: #1e293b; font-size: 1.1rem; margin-bottom: 0.3rem;">{announcement['title']}</div>
+                    <div style="color: #475569; font-size: 0.9rem; line-height: 1.4;">{announcement['content']}</div>
                 </div>
+            </div>
+            <div style="font-size: 0.8rem; color: #64748b; font-weight: 500; border-top: 1px solid #f1f5f9; padding-top: 0.8rem;">
+                {announcement['date']}
             </div>
         </div>
         """, unsafe_allow_html=True)
