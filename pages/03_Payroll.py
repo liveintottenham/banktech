@@ -1,10 +1,17 @@
-# pages/03_Payroll.py
+# pages/3_📄_Payroll.py
 import streamlit as st
 import base64
 from datetime import datetime
 from common import get_text, show_security_warnings, show_announcement, main_layout
 
-# 급여 계산 함수 (기존과 동일)
+# 페이지 제목 설정
+st.set_page_config(
+    page_title="給与 - Otsuka Bank",
+    page_icon="📄",
+    layout="wide"
+)
+
+# 급여 계산 함수들 (기존 코드 그대로)
 def calculate_salary(basic_salary, overtime_pay, income_tax, residence_tax, health_insurance, pension, employment_insurance, other_deduction):
     total_income = basic_salary + overtime_pay
     total_deductions = income_tax + residence_tax + health_insurance + pension + employment_insurance + other_deduction
@@ -28,7 +35,6 @@ def calculate_salary(basic_salary, overtime_pay, income_tax, residence_tax, heal
         }
     }
 
-# 급여명세서 HTML 생성 (기존과 동일)
 def create_payslip_html(salary_data, payslip_date, user_data):
     html_content = f"""
     <!DOCTYPE html>
@@ -132,7 +138,7 @@ def create_payslip_html(salary_data, payslip_date, user_data):
     """
     return html_content
 
-def render():
+def main():
     main_layout()
     show_security_warnings()
     show_announcement()
@@ -196,6 +202,5 @@ def render():
                 unsafe_allow_html=True
             )
 
-# Streamlit이 이 페이지를 로드할 때 실행
 if __name__ == "__main__":
-    render()
+    main()

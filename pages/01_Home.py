@@ -1,9 +1,16 @@
-# pages/01_Home.py
+# pages/1_🏠_Home.py
 import streamlit as st
 import pandas as pd
 from common import get_text, show_security_warnings, show_announcement, main_layout
 
-def render_home():
+# 페이지 제목 설정 (사이드바에 표시됨)
+st.set_page_config(
+    page_title="ホーム - Otsuka Bank",
+    page_icon="🏠",
+    layout="wide"
+)
+
+def main():
     main_layout()
     show_security_warnings()
     show_announcement()
@@ -84,16 +91,15 @@ def render_home():
     
     with col1:
         if st.button("💰 新規積立作成", use_container_width=True, type="primary"):
-            st.switch_page("pages/02_Savings.py")
+            st.switch_page("pages/2_💰_Savings.py")
     
     with col2:
         if st.button("📊 積立一覧表示", use_container_width=True):
-            st.switch_page("pages/02_Savings.py")
+            st.switch_page("pages/2_💰_Savings.py")
     
     with col3:
         if st.button("📄 給与明細作成", use_container_width=True):
-            st.switch_page("pages/03_Payroll.py")
+            st.switch_page("pages/3_📄_Payroll.py")
 
-# Streamlit이 이 페이지를 로드할 때 실행
 if __name__ == "__main__":
-    render_home()
+    main()

@@ -1,4 +1,4 @@
-# bankmain.py
+# app.py
 import streamlit as st
 from common import initialize_session_state, load_css, login
 
@@ -17,9 +17,8 @@ def main():
     if not st.session_state.logged_in:
         login()
     else:
-        # 메인 앱에서는 홈페이지 내용만 표시
-        from pages._01_Home import render_home
-        render_home()
+        # 로그인 후에는 자동으로 홈페이지로 이동
+        st.switch_page("pages/1_🏠_Home.py")
 
 if __name__ == "__main__":
     main()
