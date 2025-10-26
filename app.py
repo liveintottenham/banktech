@@ -1,6 +1,6 @@
 # app.py
 import streamlit as st
-from common import initialize_session_state, load_css, login
+from common import initialize_session_state, login
 
 def main():
     # Streamlit 페이지 설정
@@ -12,7 +12,6 @@ def main():
     )
     
     initialize_session_state()
-    load_css()
     
     if not st.session_state.logged_in:
         login()

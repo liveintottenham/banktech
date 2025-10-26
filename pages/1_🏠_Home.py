@@ -1,11 +1,13 @@
 # pages/1_🏠_Home.py
 import streamlit as st
 import pandas as pd
-from common import get_text, show_security_warnings, show_announcement, main_layout
 import random
 from datetime import datetime, timedelta
 
-# 페이지 제목 설정 (사이드바에 표시됨)
+# common에서 필요한 함수들만 import
+from common import get_text, show_security_warnings, show_announcement, main_layout
+
+# 페이지 설정
 st.set_page_config(
     page_title="ホーム - Otsuka Bank",
     page_icon="🏠",
@@ -33,11 +35,12 @@ def generate_recent_transactions():
     return transactions
 
 def main():
+    # 공통 레이아웃 적용
     main_layout()
     show_security_warnings()
     show_announcement()
     
-    # 사용자 환영 메시지 - 수정된 부분
+    # 사용자 환영 메시지
     user_name_jp = st.session_state.user_data['name'].split(' / ')[0]
     col1, col2 = st.columns([3, 1])
     with col1:
@@ -62,9 +65,8 @@ def main():
         total_savings += calc['final_balance']
         monthly_payment += savings['monthly_amount']
     
-    # 랜덤 데이터로 실제 은행처럼 보이게
-    total_assets = total_savings + 12500000  # 기본 자산 추가
-    monthly_income = 350000  # 기본 월 수입
+    total_assets = total_savings + 12500000
+    monthly_income = 350000
     
     col1, col2, col3, col4 = st.columns(4)
     
@@ -104,30 +106,25 @@ def main():
         </div>
         """, unsafe_allow_html=True)
     
-    # 빠른 접근 그리드
+    # 빠른 접근
     st.markdown(f"### ⚡ {get_text('quick_access')}")
     
-    quick_actions = [
-        {"icon": "💰", "title": "新規積立作成\nCreate New Savings", "page": "pages/2_💰_Savings.py"},
-        {"icon": "📊", "title": "積立一覧表示\nView Savings List", "page": "pages/2_💰_Savings.py"},
-        {"icon": "📄", "title": "給与明細作成\nCreate Payslip", "page": "pages/3_📄_Payroll.py"},
-        {"icon": "💳", "title": "口座振込\nAccount Transfer", "page": "pages/2_💰_Savings.py"},
-        {"icon": "📈", "title": "資産分析\nAsset Analysis", "page": "pages/1_🏠_Home.py"},
-        {"icon": "⚙️", "title": "設定\nSettings", "page": "pages/1_🏠_Home.py"}
-    ]
+    col1, col2, col3 = st.columns(3)
     
-    cols = st.columns(3)
-    for i, action in enumerate(quick_actions):
-        with cols[i % 3]:
-            if st.button(
-                f"{action['icon']} {action['title']}", 
-                use_container_width=True,
-                key=f"quick_{i}"
-            ):
-                st.switch_page(action['page'])
+    with col1:
+        if st.button("💰 新規積立作成\nCreate New Savings", use_container_width=True, type="primary"):
+            st.switch_page("pages/2_💰_Savings.py")
     
-    # 차트와 거래 내역 섹션
-    col1, col2 = st.columns([2, 1])
+    with col2:
+        if st.button("📊 積立一覧表示\nView Savings List", use_container_width=True):
+            st.switch_page("pages/2_💰_Savings.py")
+    
+    with col3:
+        if st.button("📄 給与明細作成\nCreate Payslip", use_container_width=True):
+            st.switch_page("pages/3_📄_Payroll.py")
+    
+    # 차트 섹션
+    col1, col2 = st.columns(2)
     
     with col1:
         st.markdown(f"### 📈 {get_text('asset_growth')}")
