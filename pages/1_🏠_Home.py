@@ -37,10 +37,11 @@ def main():
     show_security_warnings()
     show_announcement()
     
-    # 사용자 환영 메시지
+    # 사용자 환영 메시지 - 수정된 부분
+    user_name_jp = st.session_state.user_data['name'].split(' / ')[0]
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.markdown(f"## 👋 {get_text('welcome').format(st.session_state.user_data['name'])}")
+        st.markdown(f"## 👋 {get_text('welcome').format(user_name_jp)}")
     with col2:
         st.markdown(f"""
         <div style="text-align: right; color: #64748b; font-size: 0.9rem;">

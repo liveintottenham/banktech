@@ -20,7 +20,7 @@ LANGUAGES = {
         'home': '🏠 Home / ホーム',
         'savings': '💰 Savings / 積立',
         'payroll': '📄 Payroll / 給与',
-        'welcome': 'Welcome, {} / ようこそ、{}様',
+        'welcome': 'Welcome, {}',  # 하나의 {}만 사용
         'logout': 'Logout / ログアウト',
         'no_capture': '⚠️ SCREEN CAPTURE AND PHOTOGRAPHY PROHIBITED / この画面のスクリーンショット・撮影は禁止されています',
         'security_warning': '🔒 SECURITY WARNING: THIS PAGE IS MONITORED / セキュリティ警告: このページは監視されています',
@@ -83,7 +83,7 @@ LANGUAGES = {
         'home': '🏠 ホーム / Home',
         'savings': '💰 積立 / Savings',
         'payroll': '📄 給与 / Payroll',
-        'welcome': 'ようこそ、{}様 / Welcome, {}',
+        'welcome': 'ようこそ、{}様',  # 하나의 {}만 사용
         'logout': 'ログアウト / Logout',
         'no_capture': '⚠️ この画面のスクリーンショット・撮影は禁止されています / SCREEN CAPTURE AND PHOTOGRAPHY PROHIBITED',
         'security_warning': '🔒 セキュリティ警告: このページは監視されています / SECURITY WARNING: THIS PAGE IS MONITORED',
@@ -549,6 +549,9 @@ def login():
 
 # 메인 레이아웃 - 개선된 버전
 def main_layout():
+    # 사용자 이름에서 일본어 부분만 추출
+    user_name_jp = st.session_state.user_data['name'].split(' / ')[0]
+    
     st.markdown(f"""
     <div class="bank-header">
         <div class="header-content">
@@ -561,7 +564,7 @@ def main_layout():
                     </div>
                 </div>
                 <div class="user-info">
-                    <div class="welcome-text">{get_text('welcome').format(st.session_state.user_data['name'].split(' / ')[0])}</div>
+                    <div class="welcome-text">{get_text('welcome').format(user_name_jp)}</div>
                     <div class="account-info">{get_text('account_number')}: {st.session_state.user_data['account']}</div>
                 </div>
             </div>
