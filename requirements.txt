@@ -1,0 +1,16 @@
+# Streamlit - 웹 앱 프레임워크
+streamlit>=1.28.0
+
+# 데이터 처리
+pandas>=2.0.0
+numpy>=1.24.0
+
+# 날짜/시간 처리
+python-dateutil>=2.8.0
+
+# 추가 시각화 패키지 (선택사항)
+plotly>=5.15.0
+altair>=5.0.0
+
+# Excel 처리 (선택사항)
+openpyxl>=3.1.0
