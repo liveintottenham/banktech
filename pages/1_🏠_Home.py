@@ -42,18 +42,23 @@ def main():
     show_announcement()
     show_security_warnings()
     
-    # 사용자 환영 메시지
+    # 사용자 환영 메시지 - 여백 추가
     user_name_jp = st.session_state.user_data['name']
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.markdown(f"## 👋 {get_text('welcome').format(user_name_jp)}")
-    with col2:
-        st.markdown(f"""
-        <div style="text-align: right; color: #64748b; font-size: 0.9rem;">
-            🏢 {st.session_state.user_data['department']}<br>
-            🔢 社員番号: {st.session_state.user_data['emp_num']}
+    
+    # 여백을 추가한 환영 메시지
+    st.markdown(f"""
+    <div style="margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h2 style="margin: 0 0 0.5rem 0; font-size: 2rem;">👋 {get_text('welcome').format(user_name_jp)}</h2>
+            </div>
+            <div style="text-align: right; color: #64748b; font-size: 0.9rem;">
+                🏢 {st.session_state.user_data['department']}<br>
+                🔢 社員番号: {st.session_state.user_data['emp_num']}
+            </div>
         </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
     
     # 요약 메트릭
     st.markdown(f"### 📊 {get_text('financial_overview')}")
