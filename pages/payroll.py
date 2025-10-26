@@ -2,7 +2,9 @@
 import streamlit as st
 import base64
 from datetime import datetime
-from ..app import get_text, st
+
+# common.py에서 필요한 함수들 임포트
+from common import get_text
 
 # 급여 계산 함수
 def calculate_salary(basic_salary, overtime_pay, income_tax, residence_tax, health_insurance, pension, employment_insurance, other_deduction):

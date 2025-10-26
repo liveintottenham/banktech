@@ -4,7 +4,9 @@ import pandas as pd
 import base64
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
-from ..app import get_text, st
+
+# common.py에서 필요한 함수들 임포트
+from common import get_text
 
 # 적금 계산 함수
 def calculate_savings_schedule(monthly_amount, period_years, interest_rate, start_date, adjustments=None):
