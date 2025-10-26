@@ -37,8 +37,10 @@ def generate_recent_transactions():
 def main():
     # 공통 레이아웃 적용
     main_layout()
-    show_security_warnings()
+    
+    # 순서 변경: 공지사항 먼저, 그 다음 보안 경고
     show_announcement()
+    show_security_warnings()
     
     # 사용자 환영 메시지
     user_name_jp = st.session_state.user_data['name']

@@ -260,39 +260,46 @@ def load_css():
         box-shadow: 0 8px 32px rgba(0,0,0,0.1);
     }
     
-    /* 컴팩트한 상단 컨트롤 */
+    /* 컴팩트한 상단 컨트롤 - 완전히 재설계 */
     .top-controls {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin: 0;
-        padding: 0.8rem 2rem;
+        padding: 0.6rem 2rem;
         background: rgba(255,255,255,0.1);
         border-top: 1px solid rgba(255,255,255,0.15);
         backdrop-filter: blur(10px);
+        gap: 1rem;
     }
     
-    .compact-controls {
+    .inline-controls {
         display: flex;
         align-items: center;
-        gap: 1.5rem;
+        gap: 1rem;
         width: 100%;
         justify-content: space-between;
     }
     
-    .status-time-group {
+    .left-controls {
         display: flex;
         align-items: center;
         gap: 1rem;
+    }
+    
+    .right-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
     
     .status-indicator {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.5rem 1rem;
+        padding: 0.4rem 0.8rem;
         border-radius: 12px;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         font-weight: 600;
         background: rgba(34, 197, 94, 0.9);
         color: white;
@@ -305,34 +312,28 @@ def load_css():
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        color: white;
-        font-size: 0.9rem;
+        color: #1e293b;
+        font-size: 0.85rem;
         font-weight: 500;
-        background: rgba(255,255,255,0.15);
-        padding: 0.5rem 1rem;
+        background: rgba(255,255,255,0.9);
+        padding: 0.4rem 0.8rem;
         border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.3);
         white-space: nowrap;
-        backdrop-filter: blur(10px);
-    }
-    
-    .control-buttons {
-        display: flex;
-        align-items: center;
-        gap: 0.8rem;
     }
     
     /* 컴팩트 버튼 스타일 */
-    .stButton > button {
+    .compact-button {
         border-radius: 10px !important;
         font-weight: 600 !important;
-        font-size: 0.85rem !important;
-        padding: 0.5rem 1rem !important;
+        font-size: 0.8rem !important;
+        padding: 0.4rem 0.8rem !important;
         height: auto !important;
         min-height: unset !important;
+        margin: 0 !important;
     }
     
-    /* 캡처 금지 경고 */
+    /* 캡처 금지 경고 - 플래시 효과 복원 */
     .capture-warning {
         background: linear-gradient(45deg, #ef4444, #dc2626);
         color: white;
@@ -343,6 +344,7 @@ def load_css():
         margin: 0 -1rem 0 -1rem;
         border-radius: 0 0 16px 16px;
         backdrop-filter: blur(10px);
+        animation: pulse 2s infinite;
     }
     
     /* 보안 경고 */
@@ -356,6 +358,7 @@ def load_css():
         margin: 0 -1rem 2rem -1rem;
         border-radius: 0 0 12px 12px;
         backdrop-filter: blur(10px);
+        animation: glow 2s infinite;
     }
     
     /* 모던한 공지사항 */
@@ -430,7 +433,7 @@ def load_css():
     
     /* 거래 내역 간격 조정 */
     .compact-transaction {
-        padding: 0.75rem 0;
+        padding: 0.5rem 0;
         border-bottom: 1px solid #f1f5f9;
     }
     
@@ -459,29 +462,46 @@ def load_css():
     }
     
     @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.8; }
+        0%, 100% { 
+            opacity: 1;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+        }
+        50% { 
+            opacity: 0.9;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.6);
+        }
     }
     
     @keyframes glow {
-        0%, 100% { box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4); }
-        50% { box-shadow: 0 6px 18px rgba(217, 119, 6, 0.6); }
+        0%, 100% { 
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
+        }
+        50% { 
+            box-shadow: 0 6px 25px rgba(245, 158, 11, 0.6);
+        }
     }
     
     /* 반응형 디자인 */
     @media (max-width: 768px) {
-        .compact-controls {
+        .inline-controls {
             flex-direction: column;
             gap: 1rem;
         }
         
-        .status-time-group {
+        .left-controls, .right-controls {
             justify-content: center;
+            width: 100%;
         }
-        
-        .control-buttons {
-            justify-content: center;
-        }
+    }
+    
+    /* Streamlit 버튼 오버라이드 */
+    .stButton > button {
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        padding: 0.5rem 1rem !important;
+        height: auto !important;
+        min-height: unset !important;
     }
     
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -530,7 +550,7 @@ def main_layout():
     """메인 레이아웃 - 모든 페이지에서 호출"""
     load_css()
     
-    user_name_jp = st.session_state.user_data['name'].split(' / ')[0]
+    user_name_jp = st.session_state.user_data['name']
     
     st.markdown(f"""
     <div class="bank-header fade-in-up">
@@ -552,12 +572,12 @@ def main_layout():
     </div>
     """, unsafe_allow_html=True)
     
-    # 컴팩트한 상단 컨트롤 - 한 줄로 배치
+    # 컴팩트한 상단 컨트롤 - 완전히 재설계 (한 줄로 배치)
     st.markdown('<div class="top-controls">', unsafe_allow_html=True)
-    st.markdown('<div class="compact-controls">', unsafe_allow_html=True)
+    st.markdown('<div class="inline-controls">', unsafe_allow_html=True)
     
     # 왼쪽: 상태와 시간
-    st.markdown('<div class="status-time-group">', unsafe_allow_html=True)
+    st.markdown('<div class="left-controls">', unsafe_allow_html=True)
     
     current_time = datetime.now().strftime("%Y/%m/%d %H:%M")
     
@@ -569,7 +589,7 @@ def main_layout():
     </div>
     """, unsafe_allow_html=True)
     
-    # 날짜
+    # 날짜 (어두운 색상으로 수정)
     st.markdown(f"""
     <div class="time-display">
         <span>📅</span>
@@ -580,7 +600,7 @@ def main_layout():
     st.markdown('</div>', unsafe_allow_html=True)
     
     # 오른쪽: 버튼들
-    st.markdown('<div class="control-buttons">', unsafe_allow_html=True)
+    st.markdown('<div class="right-controls">', unsafe_allow_html=True)
     
     # 언어 전환 버튼
     current_lang = st.session_state.language
@@ -602,7 +622,7 @@ def main_layout():
     st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
 
 def show_security_warnings():
-    """보안 경고 표시"""
+    """보안 경고 표시 - 순서 변경"""
     st.markdown(f'<div class="capture-warning">{get_text("no_capture")}</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="security-alert">{get_text("security_warning")}</div>', unsafe_allow_html=True)
 
@@ -650,6 +670,3 @@ def show_announcement():
         """, unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
-    
-    # 공지사항 아래 구분선 추가
-    st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
