@@ -10,7 +10,7 @@ from common import get_text, show_security_warnings, show_announcement, main_lay
 # 페이지 설정
 st.set_page_config(
     page_title="ホーム - Otsuka Bank",
-    page_icon="🏠",
+    page_icon="🏠", 
     layout="wide"
 )
 
@@ -35,7 +35,7 @@ def generate_recent_transactions():
     return transactions
 
 def main():
-    # 공통 레이아웃 적용
+    # 공통 레이아웃 적용 - 이제 모든 페이지에서 CSS가 적용됩니다
     main_layout()
     show_security_warnings()
     show_announcement()
@@ -166,5 +166,5 @@ def main():
         
         st.divider()
 
-if __name__ == "__main__":
-    main()
+# 페이지 실행
+main()

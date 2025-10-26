@@ -8,7 +8,7 @@ import time
 import base64
 import random
 
-# 다국어 지원 - 여기에만 정의
+# 다국어 지원
 LANGUAGES = {
     'EN': {
         'title': 'Otsuka Bank / 大塚銀行',
@@ -142,8 +142,6 @@ def initialize_session_state():
         st.session_state.logged_in = False
     if 'language' not in st.session_state:
         st.session_state.language = 'JP'
-    if 'css_loaded' not in st.session_state:
-        st.session_state.css_loaded = False
     
     # 사용자 데이터
     if 'user_data' not in st.session_state:
@@ -162,242 +160,241 @@ def initialize_session_state():
     if 'payroll_list' not in st.session_state:
         st.session_state.payroll_list = []
 
+# CSS를 항상 적용하는 함수 (페이지마다 호출해야 함)
 def load_css():
     """CSS를 로드하고 적용 - 모든 페이지에서 호출해야 함"""
-    if not st.session_state.get('css_loaded', False):
-        css = """
-        <style>
-        /* 기본 스타일 */
-        .stApp {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
-            font-family: 'Noto Sans JP', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        /* 은행 헤더 */
-        .bank-header {
-            background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
-            color: white;
-            padding: 1.5rem 0 1rem 0;
-            margin: -1rem -1rem 0 -1rem;
-            box-shadow: 0 4px 20px rgba(30, 58, 138, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .bank-header::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #10b981, #3b82f6, #ef4444, #f59e0b);
-            z-index: 3;
-        }
-        
-        .header-content {
-            position: relative;
-            z-index: 2;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-        
-        .logo-section {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-        }
-        
-        .bank-logo {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .logo-icon {
-            font-size: 2.5rem;
-            background: rgba(255,255,255,0.1);
-            padding: 0.8rem;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        .bank-title {
-            font-size: 2.2rem !important;
-            font-weight: 800 !important;
-            margin: 0 !important;
-            color: white !important;
-        }
-        
-        .bank-subtitle {
-            font-size: 1.1rem !important;
-            opacity: 0.9;
-            margin: 0.2rem 0 0 0 !important;
-            font-weight: 400;
-        }
-        
-        .user-info {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 0.3rem;
-            background: rgba(255,255,255,0.1);
-            padding: 0.8rem 1.2rem;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        /* 상단 컨트롤 */
-        .top-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 0.5rem 0 0 0;
-            gap: 1rem;
-            padding: 0.8rem 1.5rem;
-            background: rgba(255,255,255,0.08);
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.15);
-        }
-        
-        /* 캡처 금지 경고 - 둥글게 */
-        .capture-warning {
-            background: linear-gradient(45deg, #dc2626, #b91c1c);
-            color: white;
-            padding: 1.2rem;
-            text-align: center;
-            font-weight: 800;
-            font-size: 1.1rem;
-            margin: 0 -1rem 0 -1rem;
-            animation: pulse 2s infinite;
-            border-radius: 0 0 20px 20px;
-        }
-        
-        /* 보안 경고 */
-        .security-alert {
-            background: linear-gradient(45deg, #d97706, #b45309);
-            color: white;
-            padding: 1rem 2rem;
-            text-align: center;
-            font-weight: 700;
-            font-size: 1rem;
-            margin: 0 -1rem 1rem -1rem;
-            animation: glow 2s infinite;
-            border-radius: 0 0 15px 15px;
-        }
-        
-        /* 공지사항 배너 */
-        .announcement-banner {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
-            padding: 1.2rem 2rem;
-            margin: 0 -1rem 1.5rem -1rem;
-            border-radius: 0 0 20px 20px;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-        
-        /* 공지사항 섹션 */
-        .announcements-container {
-            background: linear-gradient(135deg, #ffffff, #fafafa);
-            border-radius: 12px;
-            padding: 1.5rem;
-            border: 1px solid #e2e8f0;
-            margin-bottom: 1.5rem;
-        }
-        
-        .announcement-item {
-            padding: 1rem 0;
-            border-bottom: 1px solid #f1f5f9;
-            display: flex;
-            align-items: flex-start;
-            gap: 0.8rem;
-        }
-        
-        .announcement-item:last-child {
-            border-bottom: none;
-        }
-        
-        .announcement-icon {
-            font-size: 1.2rem;
-            margin-top: 0.2rem;
-        }
-        
-        .announcement-content {
-            flex: 1;
-        }
-        
-        .announcement-title {
-            font-weight: 600;
-            margin-bottom: 0.3rem;
-            color: #1e293b;
-        }
-        
-        .announcement-date {
-            font-size: 0.8rem;
-            color: #64748b;
-        }
-        
-        /* 메트릭 카드 */
-        .metric-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            border: 1px solid #f1f5f9;
-            margin-bottom: 1rem;
-        }
-        
-        .content-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border: 1px solid #e2e8f0;
-            margin-bottom: 1rem;
-        }
-        
-        .status-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-        
-        .status-online {
-            background: #dcfce7;
-            color: #166534;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
-        }
-        
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4); }
-            50% { box-shadow: 0 6px 18px rgba(217, 119, 6, 0.6); }
-        }
-        
-        /* Streamlit 버튼 스타일 */
-        .stButton > button {
-            border-radius: 8px !important;
-            font-weight: 600 !important;
-        }
-        
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800&display=swap');
-        </style>
-        """
-        st.markdown(css, unsafe_allow_html=True)
-        st.session_state.css_loaded = True
+    css = """
+    <style>
+    /* 기본 스타일 */
+    .stApp {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
+        font-family: 'Noto Sans JP', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    /* 은행 헤더 */
+    .bank-header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+        color: white;
+        padding: 1.5rem 0 1rem 0;
+        margin: -1rem -1rem 2rem -1rem;
+        box-shadow: 0 4px 20px rgba(30, 58, 138, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .bank-header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #10b981, #3b82f6, #ef4444, #f59e0b);
+        z-index: 3;
+    }
+    
+    .header-content {
+        position: relative;
+        z-index: 2;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+    
+    .logo-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+    
+    .bank-logo {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .logo-icon {
+        font-size: 2.5rem;
+        background: rgba(255,255,255,0.1);
+        padding: 0.8rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .bank-title {
+        font-size: 2.2rem !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
+        color: white !important;
+    }
+    
+    .bank-subtitle {
+        font-size: 1.1rem !important;
+        opacity: 0.9;
+        margin: 0.2rem 0 0 0 !important;
+        font-weight: 400;
+    }
+    
+    .user-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.3rem;
+        background: rgba(255,255,255,0.1);
+        padding: 0.8rem 1.2rem;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    /* 상단 컨트롤 */
+    .top-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 0.5rem 0 0 0;
+        gap: 1rem;
+        padding: 0.8rem 1.5rem;
+        background: rgba(255,255,255,0.08);
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.15);
+    }
+    
+    /* 캡처 금지 경고 - 둥글게 */
+    .capture-warning {
+        background: linear-gradient(45deg, #dc2626, #b91c1c);
+        color: white;
+        padding: 1.2rem;
+        text-align: center;
+        font-weight: 800;
+        font-size: 1.1rem;
+        margin: -2rem -1rem 1rem -1rem;
+        animation: pulse 2s infinite;
+        border-radius: 0 0 20px 20px;
+    }
+    
+    /* 보안 경고 */
+    .security-alert {
+        background: linear-gradient(45deg, #d97706, #b45309);
+        color: white;
+        padding: 1rem 2rem;
+        text-align: center;
+        font-weight: 700;
+        font-size: 1rem;
+        margin: 0 -1rem 2rem -1rem;
+        animation: glow 2s infinite;
+        border-radius: 0 0 15px 15px;
+    }
+    
+    /* 공지사항 배너 */
+    .announcement-banner {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        padding: 1.2rem 2rem;
+        margin: 0 -1rem 2rem -1rem;
+        border-radius: 0 0 20px 20px;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+    
+    /* 공지사항 섹션 */
+    .announcements-container {
+        background: linear-gradient(135deg, #ffffff, #fafafa);
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 1.5rem;
+    }
+    
+    .announcement-item {
+        padding: 1rem 0;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.8rem;
+    }
+    
+    .announcement-item:last-child {
+        border-bottom: none;
+    }
+    
+    .announcement-icon {
+        font-size: 1.2rem;
+        margin-top: 0.2rem;
+    }
+    
+    .announcement-content {
+        flex: 1;
+    }
+    
+    .announcement-title {
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+        color: #1e293b;
+    }
+    
+    .announcement-date {
+        font-size: 0.8rem;
+        color: #64748b;
+    }
+    
+    /* 메트릭 카드 */
+    .metric-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border: 1px solid #f1f5f9;
+        margin-bottom: 1rem;
+    }
+    
+    .content-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+        margin-bottom: 1rem;
+    }
+    
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .status-online {
+        background: #dcfce7;
+        color: #166534;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+    
+    @keyframes glow {
+        0%, 100% { box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4); }
+        50% { box-shadow: 0 6px 18px rgba(217, 119, 6, 0.6); }
+    }
+    
+    /* Streamlit 버튼 스타일 */
+    .stButton > button {
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+    }
+    
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800&display=swap');
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
 
 def login():
     """로그인 페이지"""
@@ -438,7 +435,7 @@ def login():
 
 def main_layout():
     """메인 레이아웃 - 모든 페이지에서 호출"""
-    load_css()
+    load_css()  # 모든 페이지에서 CSS 적용
     
     user_name_jp = st.session_state.user_data['name'].split(' / ')[0]
     
@@ -463,10 +460,7 @@ def main_layout():
     """, unsafe_allow_html=True)
     
     # 상단 컨트롤
-    st.markdown("""
-    <div class="top-controls">
-        <div style="display: flex; align-items: center; gap: 1rem;">
-    """, unsafe_allow_html=True)
+    st.markdown('<div class="top-controls">', unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
     
@@ -494,21 +488,12 @@ def main_layout():
         </div>
         """, unsafe_allow_html=True)
     
-    st.markdown("""
-        </div>
-        <div>
-    """, unsafe_allow_html=True)
-    
     with col4:
         if st.button(get_text('logout'), key="logout_btn", use_container_width=True, type="secondary"):
             st.session_state.logged_in = False
-            st.session_state.css_loaded = False
             st.rerun()
     
-    st.markdown("""
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 def show_security_warnings():
     """보안 경고 표시"""
@@ -526,7 +511,7 @@ def show_announcement():
             "priority": "high"
         },
         {
-            "icon": "📈",
+            "icon": "📈", 
             "title": "新積立プラン開始 / New Savings Plan Available",
             "content": "高金利プランのご案内 / Information about high-interest plans",
             "date": "2024-12-18",
@@ -534,7 +519,7 @@ def show_announcement():
         },
         {
             "icon": "🎄",
-            "title": "年末年始の営業について / Year-End Business Hours",
+            "title": "年末年始の営業について / Year-End Business Hours", 
             "content": "12月29日～1月4日休業 / Closed from Dec 29 to Jan 4",
             "date": "2024-12-15",
             "priority": "medium"
