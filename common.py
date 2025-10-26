@@ -245,63 +245,66 @@ def load_css():
         border: 1px solid rgba(255,255,255,0.2);
     }
     
-    /* 상단 컨트롤 - 개선된 레이아웃 */
+    /* 상단 컨트롤 - 완전히 재설계 */
     .top-controls {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin: 0;
-        gap: 1rem;
         padding: 0.8rem 2rem;
         background: rgba(255,255,255,0.08);
         border-top: 1px solid rgba(255,255,255,0.1);
     }
     
-    .controls-group {
+    .controls-left {
         display: flex;
         align-items: center;
         gap: 1rem;
     }
     
-    .status-time-group {
+    .controls-right {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 1rem;
+    }
+    
+    .status-time-container {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
         background: rgba(255,255,255,0.15);
         padding: 0.5rem 1rem;
         border-radius: 8px;
         border: 1px solid rgba(255,255,255,0.2);
     }
     
-    .control-info {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        color: #1e293b;
-        font-size: 0.9rem;
-        font-weight: 500;
-        background: rgba(255,255,255,0.9);
-        border-radius: 8px;
-        border: 1px solid rgba(255,255,255,0.3);
-    }
-    
     .status-indicator {
-        display: inline-flex;
+        display: flex;
         align-items: center;
         gap: 0.5rem;
         padding: 0.3rem 0.8rem;
         border-radius: 20px;
         font-size: 0.8rem;
         font-weight: 600;
-    }
-    
-    .status-online {
         background: #dcfce7;
         color: #166534;
     }
     
-    /* 캡처 금지 경고 - 둥글게 */
+    .time-display {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .control-button {
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+    }
+    
+    /* 캡처 금지 경고 */
     .capture-warning {
         background: linear-gradient(45deg, #dc2626, #b91c1c);
         color: white;
@@ -327,18 +330,17 @@ def load_css():
         border-radius: 0 0 15px 15px;
     }
     
-    /* 공지사항 섹션 - 깔끔한 버전 */
-    .announcement-section-clean {
+    /* 공지사항 - 깔끔한 스타일 */
+    .announcement-section {
         background: white;
         border-radius: 12px;
         padding: 1.5rem;
         border: 1px solid #e2e8f0;
         margin-bottom: 2rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        border-top: 4px solid #3b82f6;
     }
     
-    .section-header {
+    .announcement-header {
         font-size: 1.4rem;
         font-weight: 700;
         color: #1e293b;
@@ -347,11 +349,20 @@ def load_css():
         border-bottom: 2px solid #f1f5f9;
     }
     
+    .announcement-item {
+        padding: 1rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .announcement-item:last-child {
+        border-bottom: none;
+    }
+    
     /* 구분선 */
     .section-divider {
-        height: 2px;
+        height: 1px;
         background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
-        margin: 2rem -1rem;
+        margin: 2rem 0;
         border: none;
     }
     
@@ -363,7 +374,6 @@ def load_css():
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         border: 1px solid #f1f5f9;
         margin-bottom: 1rem;
-        border-top: 4px solid #3b82f6;
     }
     
     .content-card {
@@ -373,17 +383,6 @@ def load_css():
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         border: 1px solid #e2e8f0;
         margin-bottom: 1rem;
-        border-top: 4px solid #10b981;
-    }
-    
-    /* 실시간 효과를 위한 애니메이션 */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .fade-in {
-        animation: fadeIn 0.5s ease-in;
     }
     
     @keyframes pulse {
@@ -394,12 +393,6 @@ def load_css():
     @keyframes glow {
         0%, 100% { box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4); }
         50% { box-shadow: 0 6px 18px rgba(217, 119, 6, 0.6); }
-    }
-    
-    /* Streamlit 버튼 스타일 */
-    .stButton > button {
-        border-radius: 8px !important;
-        font-weight: 600 !important;
     }
     
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800&display=swap');
@@ -446,7 +439,7 @@ def login():
 
 def main_layout():
     """메인 레이아웃 - 모든 페이지에서 호출"""
-    load_css()  # 모든 페이지에서 CSS 적용
+    load_css()
     
     user_name_jp = st.session_state.user_data['name'].split(' / ')[0]
     
@@ -470,22 +463,21 @@ def main_layout():
     </div>
     """, unsafe_allow_html=True)
     
-    # 상단 컨트롤 - 개선된 레이아웃
+    # 상단 컨트롤 - 완전히 재설계
     st.markdown('<div class="top-controls">', unsafe_allow_html=True)
     
-    # 왼쪽 그룹: 상태와 시간을 함께 표시
-    st.markdown('<div class="controls-group">', unsafe_allow_html=True)
+    # 왼쪽: 상태와 시간 (온라인이 날짜 왼쪽에 위치)
+    st.markdown('<div class="controls-left">', unsafe_allow_html=True)
     
-    # 상태와 시간을 같은 그룹으로
+    # 상태와 시간을 같은 컨테이너에 배치
     current_time = datetime.now().strftime("%Y/%m/%d %H:%M")
     st.markdown(f"""
-    <div class="status-time-group">
-        <div class="status-indicator status-online">
-            <div style="width: 8px; height: 8px; background: #16a34a; border-radius: 50%; margin-right: 8px;"></div>
+    <div class="status-time-container">
+        <div class="status-indicator">
+            <div style="width: 8px; height: 8px; background: #16a34a; border-radius: 50%;"></div>
             Online / オンライン
         </div>
-        <div style="color: white; margin: 0 10px;">|</div>
-        <div class="control-info" style="margin: 0; background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3);">
+        <div class="time-display">
             <span>📅</span>
             <span>{current_time}</span>
         </div>
@@ -494,8 +486,8 @@ def main_layout():
     
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # 오른쪽 그룹: 언어 변경과 로그아웃
-    st.markdown('<div class="controls-group">', unsafe_allow_html=True)
+    # 오른쪽: 언어 변경과 로그아웃
+    st.markdown('<div class="controls-right">', unsafe_allow_html=True)
     
     # 언어 전환 버튼
     current_lang = st.session_state.language
@@ -521,7 +513,7 @@ def show_security_warnings():
     st.markdown(f'<div class="security-alert">{get_text("security_warning")}</div>', unsafe_allow_html=True)
 
 def show_announcement():
-    """공지사항 표시 - 깔끔한 버전으로 수정"""
+    """공지사항 표시 - 깔끔한 버전"""
     announcements = [
         {
             "icon": "🔧",
@@ -546,19 +538,24 @@ def show_announcement():
         }
     ]
     
-    st.markdown('<div class="announcement-section-clean fade-in">', unsafe_allow_html=True)
-    st.markdown(f'<div class="section-header">📢 {get_text("announcement")}</div>', unsafe_allow_html=True)
+    st.markdown('<div class="announcement-section">', unsafe_allow_html=True)
+    st.markdown(f'<div class="announcement-header">{get_text("announcement")}</div>', unsafe_allow_html=True)
     
     for announcement in announcements:
-        with st.container():
-            col1, col2 = st.columns([1, 20])
-            with col1:
-                st.write(announcement['icon'])
-            with col2:
-                st.markdown(f"**{announcement['title']}**")
-                st.markdown(f"{announcement['content']}")
-                st.markdown(f"<small style='color: #64748b;'>{announcement['date']}</small>", unsafe_allow_html=True)
-            
-            st.divider()
+        st.markdown(f"""
+        <div class="announcement-item">
+            <div style="display: flex; align-items: flex-start; gap: 0.8rem; margin-bottom: 0.5rem;">
+                <div style="font-size: 1.2rem;">{announcement['icon']}</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 0.3rem;">{announcement['title']}</div>
+                    <div style="color: #475569; margin-bottom: 0.3rem;">{announcement['content']}</div>
+                    <div style="font-size: 0.8rem; color: #64748b;">{announcement['date']}</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
+    
+    # 공지사항 아래 구분선 추가
+    st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
