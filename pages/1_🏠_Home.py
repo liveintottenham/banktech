@@ -1,4 +1,4 @@
-# pages/1_🏠_Home.py (수정된 부분만 표시)
+# pages/1_🏠_Home.py
 import streamlit as st
 import pandas as pd
 import random
@@ -27,7 +27,7 @@ def generate_recent_transactions():
         
         transactions.append({
             "date": date.strftime("%m/%d"),
-            "description": f"{transaction_type} / {['Transfer', 'Withdrawal', 'Deposit', 'Savings', 'Salary'][types.index(transaction_type)]}",
+            "description": f"{transaction_type}",
             "amount": f"¥{amount:,}",
             "type": transaction_type
         })
@@ -41,7 +41,7 @@ def main():
     show_announcement()
     
     # 사용자 환영 메시지
-    user_name_jp = st.session_state.user_data['name'].split(' / ')[0]
+    user_name_jp = st.session_state.user_data['name']
     col1, col2 = st.columns([3, 1])
     with col1:
         st.markdown(f"## 👋 {get_text('welcome').format(user_name_jp)}")
@@ -49,7 +49,7 @@ def main():
         st.markdown(f"""
         <div style="text-align: right; color: #64748b; font-size: 0.9rem;">
             🏢 {st.session_state.user_data['department']}<br>
-            🔢 社員番号 / Employee No: {st.session_state.user_data['emp_num']}
+            🔢 社員番号: {st.session_state.user_data['emp_num']}
         </div>
         """, unsafe_allow_html=True)
     
@@ -75,7 +75,7 @@ def main():
         <div class="metric-card">
             <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 1rem;">総資産 / Total Assets</div>
             <div style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; color: #1e40af;">¥{total_assets:,.0f}</div>
-            <div style="font-size: 0.75rem; opacity: 0.6;">前月比 +2.3% / +2.3% from last month</div>
+            <div style="font-size: 0.75rem; opacity: 0.6;">前月比 +2.3%</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -84,7 +84,7 @@ def main():
         <div class="metric-card">
             <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 1rem;">総積立額 / Total Savings</div>
             <div style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; color: #1e40af;">¥{total_savings:,.0f}</div>
-            <div style="font-size: 0.75rem; opacity: 0.6;">月間 +¥{monthly_payment:,.0f} / Monthly +¥{monthly_payment:,.0f}</div>
+            <div style="font-size: 0.75rem; opacity: 0.6;">月間 +¥{monthly_payment:,.0f}</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -93,7 +93,7 @@ def main():
         <div class="metric-card">
             <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 1rem;">月間収入 / Monthly Income</div>
             <div style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; color: #1e40af;">¥{monthly_income:,.0f}</div>
-            <div style="font-size: 0.75rem; opacity: 0.6;">前年比 +5.2% / +5.2% from last year</div>
+            <div style="font-size: 0.75rem; opacity: 0.6;">前年比 +5.2%</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -102,7 +102,7 @@ def main():
         <div class="metric-card">
             <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 1rem;">実行中プラン / Active Plans</div>
             <div style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; color: #1e40af;">{active_plans}</div>
-            <div style="font-size: 0.75rem; opacity: 0.6;">総プラン数 / Total Plans</div>
+            <div style="font-size: 0.75rem; opacity: 0.6;">総プラン数</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -112,15 +112,15 @@ def main():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("💰 新規積立作成\nCreate New Savings", use_container_width=True, type="primary"):
+        if st.button("💰 新規積立作成", use_container_width=True, type="primary"):
             st.switch_page("pages/2_💰_Savings.py")
     
     with col2:
-        if st.button("📊 積立一覧表示\nView Savings List", use_container_width=True):
+        if st.button("📊 積立一覧表示", use_container_width=True):
             st.switch_page("pages/2_💰_Savings.py")
     
     with col3:
-        if st.button("📄 給与明細作成\nCreate Payslip", use_container_width=True):
+        if st.button("📄 給与明細作成", use_container_width=True):
             st.switch_page("pages/3_📄_Payroll.py")
     
     # 차트 섹션
@@ -132,10 +132,10 @@ def main():
         values = [14200000, 14500000, 14800000, 15000000, 15200000, 15400000, 15600000, 15800000, 16000000, 16200000, 16400000, 16600000]
         
         chart_data = pd.DataFrame({
-            '月 / Month': months,
-            '資産 / Assets': values
+            '月': months,
+            '資産': values
         })
-        st.area_chart(chart_data.set_index('月 / Month'), height=300)
+        st.area_chart(chart_data.set_index('月'), height=300)
     
     with col2:
         st.markdown(f"### 🎯 {get_text('savings_distribution')}")
@@ -143,12 +143,12 @@ def main():
             labels = [savings['name'] for savings in st.session_state.savings_list]
             values = [savings['monthly_amount'] * savings['period'] * 12 for savings in st.session_state.savings_list]
             chart_data = pd.DataFrame({
-                'カテゴリ / Category': labels,
-                '金額 / Amount': values
+                'カテゴリ': labels,
+                '金額': values
             })
-            st.bar_chart(chart_data.set_index('カテゴリ / Category'), height=300)
+            st.bar_chart(chart_data.set_index('カテゴリ'), height=300)
         else:
-            st.info("積立プランがありません / No savings plans")
+            st.info("積立プランがありません")
     
     # 섹션 간격 추가
     st.markdown('<div class="transaction-section-spacing"></div>', unsafe_allow_html=True)
@@ -158,17 +158,16 @@ def main():
     transactions = generate_recent_transactions()
     
     for transaction in transactions:
+        st.markdown('<div class="compact-transaction">', unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1, 2, 1])
         with col1:
-            st.write(transaction['date'])
+            st.write(f"**{transaction['date']}**")
         with col2:
             st.write(transaction['description'])
         with col3:
             amount_color = "#ef4444" if transaction['type'] in ['引き出し', '振込'] else "#10b981"
-            st.markdown(f"<div style='color: {amount_color}; text-align: right; font-weight: 600;'>{transaction['amount']}</div>", unsafe_allow_html=True)
-        
-        # 간격 조정
-        st.markdown('<div class="compact-transaction"></div>', unsafe_allow_html=True)
+            st.markdown(f"<div style='color: {amount_color}; text-align: right; font-weight: 600; font-size: 0.95rem;'>{transaction['amount']}</div>", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # 페이지 실행
 main()
