@@ -1,12 +1,10 @@
-# pages/savings.py
+# pages/02_💰_積立.py
 import streamlit as st
 import pandas as pd
 import base64
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
-
-# common.py에서 필요한 함수들 임포트
-from common import get_text
+from common import get_text, show_security_warnings, show_announcement, main_layout
 
 # 적금 계산 함수
 def calculate_savings_schedule(monthly_amount, period_years, interest_rate, start_date, adjustments=None):
@@ -117,6 +115,10 @@ def create_savings_certificate_html(savings_data, user_data):
     return html_content
 
 def render():
+    main_layout()
+    show_security_warnings()
+    show_announcement()
+    
     st.markdown("## 💰 積立貯蓄管理")
     
     tab1, tab2 = st.tabs(["🆕 新規積立作成", "📋 積立一覧"])
@@ -286,3 +288,6 @@ def render():
                         st.rerun()
                     
                     st.markdown('</div>', unsafe_allow_html=True)
+
+# Streamlit이 이 페이지를 로드할 때 실행
+render()

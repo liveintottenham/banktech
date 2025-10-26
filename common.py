@@ -56,8 +56,6 @@ def initialize_session_state():
         st.session_state.logged_in = False
     if 'language' not in st.session_state:
         st.session_state.language = 'JP'
-    if 'current_page' not in st.session_state:
-        st.session_state.current_page = 'home'
     
     # 사용자 데이터
     if 'user_data' not in st.session_state:
@@ -215,6 +213,15 @@ def load_css():
         border: 1px solid #f1f5f9;
     }
     
+    .content-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border: 1px solid #e2e8f0;
+        margin-bottom: 1rem;
+    }
+    
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800&display=swap');
     </style>
     """
@@ -249,7 +256,6 @@ def login():
             if st.form_submit_button(get_text('login'), use_container_width=True):
                 if user_id == "otsuka" and password == "bank1234":
                     st.session_state.logged_in = True
-                    st.session_state.current_page = 'home'
                     st.rerun()
                 else:
                     st.error(get_text('login_error'))
@@ -295,8 +301,6 @@ def main_layout():
         </div>
     </div>
     """, unsafe_allow_html=True)
-    
-    render_nav()
 
 # 언어 전환
 def render_language_switcher():
@@ -311,31 +315,6 @@ def render_logout():
     if st.button(get_text('logout'), key="logout_btn", use_container_width=True, type="secondary"):
         st.session_state.logged_in = False
         st.rerun()
-
-# 네비게이션
-def render_nav():
-    nav_items = [
-        ('home', '🏠 ホーム'),
-        ('savings', '💰 積立'), 
-        ('payroll', '📄 給与')
-    ]
-    
-    st.markdown('<div class="nav-container">', unsafe_allow_html=True)
-    
-    cols = st.columns(len(nav_items))
-    for idx, (page, label) in enumerate(nav_items):
-        with cols[idx]:
-            is_active = st.session_state.current_page == page
-            if st.button(
-                label, 
-                key=f"nav_{page}",
-                use_container_width=True,
-                type="primary" if is_active else "secondary"
-            ):
-                st.session_state.current_page = page
-                st.rerun()
-    
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # 보안 경고 표시
 def show_security_warnings():

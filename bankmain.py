@@ -1,30 +1,25 @@
 # bankmain.py
 import streamlit as st
-
-# common.py에서 필요한 함수들 임포트
-from common import initialize_session_state, load_css, login, main_layout, show_security_warnings, show_announcement
+from common import initialize_session_state, load_css, login
 
 def main():
+    # Streamlit 페이지 설정
+    st.set_page_config(
+        page_title="Otsuka Bank Portal",
+        page_icon="🏦",
+        layout="wide",
+        initial_sidebar_state="collapsed"
+    )
+    
     initialize_session_state()
     load_css()
     
     if not st.session_state.logged_in:
         login()
     else:
-        main_layout()
-        show_security_warnings()
-        show_announcement()
-        
-        # 페이지 라우팅
-        if st.session_state.current_page == 'home':
-            from pages import home
-            home.render()
-        elif st.session_state.current_page == 'savings':
-            from pages import savings
-            savings.render()
-        elif st.session_state.current_page == 'payroll':
-            from pages import payroll
-            payroll.render()
+        # 메인 앱에서는 홈페이지 내용만 표시
+        from pages._01_Home import render_home
+        render_home()
 
 if __name__ == "__main__":
     main()

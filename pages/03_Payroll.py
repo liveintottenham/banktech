@@ -1,10 +1,8 @@
-# pages/payroll.py
+# pages/03_📄_給与.py
 import streamlit as st
 import base64
 from datetime import datetime
-
-# common.py에서 필요한 함수들 임포트
-from common import get_text
+from common import get_text, show_security_warnings, show_announcement, main_layout
 
 # 급여 계산 함수
 def calculate_salary(basic_salary, overtime_pay, income_tax, residence_tax, health_insurance, pension, employment_insurance, other_deduction):
@@ -103,6 +101,18 @@ def create_payslip_html(salary_data, payslip_date, user_data):
                         <span>健康保険</span>
                         <span>¥{salary_data['deduction_breakdown']['health_insurance']['amount']:,.0f}</span>
                     </div>
+                    <div class="detail-row">
+                        <span>厚生年金</span>
+                        <span>¥{salary_data['deduction_breakdown']['pension']['amount']:,.0f}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>雇用保険</span>
+                        <span>¥{salary_data['deduction_breakdown']['employment_insurance']['amount']:,.0f}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>控除額</span>
+                        <span>¥{salary_data['deduction_breakdown']['other_deduction']['amount']:,.0f}</span>
+                    </div>
                     <div style="border-top: 2px solid #e53e3e; padding-top: 10px;">
                         <div class="detail-row">
                             <strong>総控除額</strong>
@@ -123,6 +133,10 @@ def create_payslip_html(salary_data, payslip_date, user_data):
     return html_content
 
 def render():
+    main_layout()
+    show_security_warnings()
+    show_announcement()
+    
     st.markdown("## 📄 給与明細管理")
     
     with st.form("payroll_form"):
@@ -181,3 +195,6 @@ def render():
                 f'</a>',
                 unsafe_allow_html=True
             )
+
+# Streamlit이 이 페이지를 로드할 때 실행
+render()
