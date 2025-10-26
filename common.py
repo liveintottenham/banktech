@@ -20,7 +20,7 @@ LANGUAGES = {
         'home': '🏠 Home / ホーム',
         'savings': '💰 Savings / 積立',
         'payroll': '📄 Payroll / 給与',
-        'welcome': 'Welcome, {}',  # 하나의 {}만 사용
+        'welcome': 'Welcome, {}',
         'logout': 'Logout / ログアウト',
         'no_capture': '⚠️ SCREEN CAPTURE AND PHOTOGRAPHY PROHIBITED / この画面のスクリーンショット・撮影は禁止されています',
         'security_warning': '🔒 SECURITY WARNING: THIS PAGE IS MONITORED / セキュリティ警告: このページは監視されています',
@@ -83,7 +83,7 @@ LANGUAGES = {
         'home': '🏠 ホーム / Home',
         'savings': '💰 積立 / Savings',
         'payroll': '📄 給与 / Payroll',
-        'welcome': 'ようこそ、{}様',  # 하나의 {}만 사용
+        'welcome': 'ようこそ、{}様',
         'logout': 'ログアウト / Logout',
         'no_capture': '⚠️ この画面のスクリーンショット・撮影は禁止されています / SCREEN CAPTURE AND PHOTOGRAPHY PROHIBITED',
         'security_warning': '🔒 セキュリティ警告: このページは監視されています / SECURITY WARNING: THIS PAGE IS MONITORED',
@@ -147,6 +147,8 @@ def initialize_session_state():
         st.session_state.logged_in = False
     if 'language' not in st.session_state:
         st.session_state.language = 'JP'
+    if 'css_loaded' not in st.session_state:
+        st.session_state.css_loaded = False
     
     # 사용자 데이터
     if 'user_data' not in st.session_state:
@@ -165,23 +167,30 @@ def initialize_session_state():
     if 'payroll_list' not in st.session_state:
         st.session_state.payroll_list = []
 
-# CSS 스타일링 - 개선된 버전
+# CSS 스타일링 - 강화된 애니메이션 효과
 def load_css():
+    # CSS가 이미 로드되었는지 확인 (중복 로드 방지)
+    if st.session_state.get('css_loaded', False):
+        return
+        
     css = """
     <style>
+    /* 기본 스타일 */
     .stApp {
         background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
         font-family: 'Noto Sans JP', 'Segoe UI', 'Hiragino Sans', sans-serif;
     }
     
+    /* 은행 헤더 - 개선된 그라디언트와 그림자 */
     .bank-header {
-        background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+        background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #1e3a8a 100%);
         color: white;
         padding: 1.5rem 0 1rem 0;
         margin: -1rem -1rem 0 -1rem;
-        box-shadow: 0 4px 20px rgba(30, 58, 138, 0.2);
+        box-shadow: 0 8px 32px rgba(30, 58, 138, 0.3);
         position: relative;
         overflow: hidden;
+        animation: headerGlow 8s ease-in-out infinite;
     }
     
     .bank-header::before {
@@ -191,8 +200,21 @@ def load_css():
         left: 0;
         right: 0;
         height: 4px;
-        background: linear-gradient(90deg, #10b981, #3b82f6, #ef4444, #f59e0b);
+        background: linear-gradient(90deg, #10b981, #3b82f6, #ef4444, #f59e0b, #10b981);
+        background-size: 400% 100%;
         z-index: 3;
+        animation: gradientShift 3s ease infinite;
+    }
+    
+    .bank-header::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        animation: headerShine 6s ease-in-out infinite;
     }
     
     .header-content {
@@ -218,12 +240,13 @@ def load_css():
     
     .logo-icon {
         font-size: 2.5rem;
-        background: rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.15);
         padding: 0.8rem;
-        border-radius: 12px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.2);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-radius: 16px;
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.3);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        animation: logoFloat 4s ease-in-out infinite;
     }
     
     .bank-title {
@@ -231,14 +254,19 @@ def load_css():
         font-weight: 800 !important;
         margin: 0 !important;
         color: white !important;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        background: linear-gradient(135deg, #ffffff, #e2e8f0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
     
     .bank-subtitle {
         font-size: 1.1rem !important;
-        opacity: 0.9;
+        opacity: 0.95;
         margin: 0.2rem 0 0 0 !important;
         font-weight: 400;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
     .user-info {
@@ -246,11 +274,13 @@ def load_css():
         flex-direction: column;
         align-items: flex-end;
         gap: 0.3rem;
-        background: rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.12);
         padding: 0.8rem 1.2rem;
-        border-radius: 10px;
-        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        backdrop-filter: blur(20px);
         border: 1px solid rgba(255,255,255,0.2);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        animation: userInfoGlow 6s ease-in-out infinite;
     }
     
     .top-controls {
@@ -260,88 +290,139 @@ def load_css():
         margin: 0.5rem 0 0 0;
         gap: 1rem;
         padding: 0.8rem 1.5rem;
-        background: rgba(255,255,255,0.08);
-        border-radius: 12px;
-        backdrop-filter: blur(10px);
+        background: rgba(255,255,255,0.1);
+        border-radius: 16px;
+        backdrop-filter: blur(20px);
         border: 1px solid rgba(255,255,255,0.15);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
     }
     
-    .nav-container {
-        background: white;
-        padding: 0;
-        margin: 0 -1rem;
-        border-bottom: 1px solid #e2e8f0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-    
+    /* 캡처 금지 경고 - 강화된 애니메이션 */
     .capture-warning {
-        background: linear-gradient(45deg, #dc2626, #b91c1c, #dc2626);
+        background: linear-gradient(45deg, #dc2626, #b91c1c, #dc2626, #b91c1c);
+        background-size: 400% 400%;
         color: white;
         padding: 1.2rem;
         text-align: center;
-        font-weight: 700;
+        font-weight: 800;
         font-size: 1.1rem;
         margin: 0 -1rem 0 -1rem;
-        animation: alertPulse 1.5s ease-in-out infinite, shake 0.5s ease-in-out infinite;
+        animation: 
+            alertPulse 1.5s ease-in-out infinite,
+            shake 0.8s ease-in-out infinite,
+            gradientFlow 4s ease infinite;
         position: relative;
         overflow: hidden;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        letter-spacing: 0.5px;
+        border-bottom: 3px solid rgba(255,255,255,0.3);
     }
     
     .capture-warning::before {
+        content: "🚫";
+        position: absolute;
+        left: 2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.5rem;
+        animation: iconBounce 2s ease-in-out infinite;
+    }
+    
+    .capture-warning::after {
+        content: "🚫";
+        position: absolute;
+        right: 2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.5rem;
+        animation: iconBounce 2s ease-in-out infinite 0.5s;
+    }
+    
+    /* 보안 경고 - 강화된 애니메이션 */
+    .security-alert {
+        background: linear-gradient(45deg, #d97706, #b45309, #d97706, #b45309);
+        background-size: 400% 400%;
+        color: white;
+        padding: 1rem 2rem;
+        text-align: center;
+        font-weight: 700;
+        font-size: 1rem;
+        margin: 0 -1rem 1rem -1rem;
+        animation: 
+            glow 2s ease-in-out infinite,
+            colorShift 4s ease-in-out infinite,
+            gradientFlow 6s ease infinite;
+        position: relative;
+        overflow: hidden;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        border-bottom: 2px solid rgba(255,255,255,0.2);
+    }
+    
+    .security-alert::before {
+        content: "🔒";
+        position: absolute;
+        left: 1.5rem;
+        animation: lockPulse 3s ease-in-out infinite;
+    }
+    
+    /* 공지사항 배너 - 개선된 애니메이션 */
+    .announcement-banner {
+        background: linear-gradient(135deg, #f59e0b, #d97706, #f59e0b, #d97706);
+        background-size: 400% 400%;
+        color: white;
+        padding: 1.2rem 2rem;
+        margin: 0 -1rem 1.5rem -1rem;
+        border-radius: 0 0 20px 20px;
+        box-shadow: 0 8px 32px rgba(245, 158, 11, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        font-weight: 700;
+        font-size: 1.1rem;
+        animation: 
+            gentlePulse 4s ease-in-out infinite,
+            gradientFlow 8s ease infinite;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .announcement-banner::before {
         content: "";
         position: absolute;
         top: 0;
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-        animation: shine 2s ease-in-out infinite;
-    }
-    
-    .security-alert {
-        background: linear-gradient(45deg, #d97706, #b45309, #d97706);
-        color: white;
-        padding: 1rem 2rem;
-        text-align: center;
-        font-weight: 600;
-        font-size: 1rem;
-        margin: 0 -1rem 1rem -1rem;
-        animation: glow 2s ease-in-out infinite, colorShift 3s ease-in-out infinite;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .announcement-banner {
-        background: linear-gradient(135deg, #f59e0b, #d97706, #f59e0b);
-        color: white;
-        padding: 1.2rem 2rem;
-        margin: 0 -1rem 1.5rem -1rem;
-        border-radius: 0 0 12px 12px;
-        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        font-weight: 600;
-        font-size: 1.1rem;
-        animation: gentlePulse 4s ease-in-out infinite;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        animation: bannerShine 4s ease-in-out infinite;
     }
     
     .announcement-section {
         background: white;
-        border-radius: 12px;
+        border-radius: 16px;
         padding: 1.5rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         border: 1px solid #e2e8f0;
         margin-bottom: 1.5rem;
+        animation: cardEntrance 0.8s ease-out;
     }
     
     .announcement-item {
-        padding: 0.8rem 0;
+        padding: 1rem 0;
         border-bottom: 1px solid #f1f5f9;
         display: flex;
         align-items: flex-start;
         gap: 0.8rem;
+        transition: all 0.3s ease;
+    }
+    
+    .announcement-item:hover {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 0 -0.5rem;
+        transform: translateX(8px);
     }
     
     .announcement-item:last-child {
@@ -349,8 +430,9 @@ def load_css():
     }
     
     .announcement-icon {
-        font-size: 1.2rem;
+        font-size: 1.4rem;
         margin-top: 0.2rem;
+        animation: iconSpin 6s linear infinite;
     }
     
     .announcement-content {
@@ -358,149 +440,301 @@ def load_css():
     }
     
     .announcement-title {
-        font-weight: 600;
+        font-weight: 700;
         margin-bottom: 0.3rem;
         color: #1e293b;
+        font-size: 1rem;
     }
     
     .announcement-date {
         font-size: 0.8rem;
         color: #64748b;
+        font-weight: 500;
     }
     
+    /* 메트릭 카드 - 개선된 애니메이션 */
     .metric-card {
         background: white;
-        border-radius: 16px;
-        padding: 1.8rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         border: 1px solid #f1f5f9;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        animation: cardEntrance 0.6s ease-out;
+    }
+    
+    .metric-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #3b82f6, #10b981, #f59e0b);
+        background-size: 200% 100%;
+        animation: gradientShift 3s ease infinite;
     }
     
     .metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
     }
     
     .content-card {
         background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border-radius: 16px;
+        padding: 1.8rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         border: 1px solid #e2e8f0;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
+        animation: cardEntrance 0.7s ease-out;
+        transition: all 0.3s ease;
+    }
+    
+    .content-card:hover {
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
     }
     
     .quick-access-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin: 1.5rem 0;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.2rem;
+        margin: 2rem 0;
     }
     
     .quick-access-item {
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8, #3b82f6);
+        background-size: 200% 200%;
         color: white;
-        padding: 1.5rem;
-        border-radius: 12px;
+        padding: 2rem 1.5rem;
+        border-radius: 16px;
         text-align: center;
         cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        animation: gradientFlow 6s ease infinite;
+        position: relative;
+        overflow: hidden;
+        border: none;
+        font-weight: 600;
+        font-size: 1rem;
+        line-height: 1.4;
+    }
+    
+    .quick-access-item::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s ease;
     }
     
     .quick-access-item:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
-        background: linear-gradient(135deg, #1d4ed8, #1e3a8a);
+        transform: translateY(-6px) scale(1.05);
+        box-shadow: 0 15px 40px rgba(59, 130, 246, 0.6);
+        background: linear-gradient(135deg, #1d4ed8, #1e3a8a, #1d4ed8);
+        background-size: 200% 200%;
+    }
+    
+    .quick-access-item:hover::before {
+        left: 100%;
     }
     
     .status-indicator {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.3rem 0.8rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.85rem;
         font-weight: 600;
+        animation: statusPulse 2s ease-in-out infinite;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     
     .status-online {
-        background: #dcfce7;
+        background: linear-gradient(135deg, #dcfce7, #bbf7d0);
         color: #166534;
+        border: 2px solid #22c55e;
     }
     
     .status-offline {
-        background: #fecaca;
+        background: linear-gradient(135deg, #fecaca, #fca5a5);
         color: #dc2626;
+        border: 2px solid #ef4444;
+    }
+    
+    /* 애니메이션 키프레임 정의 */
+    @keyframes headerGlow {
+        0%, 100% { box-shadow: 0 8px 32px rgba(30, 58, 138, 0.3); }
+        50% { box-shadow: 0 12px 48px rgba(30, 58, 138, 0.5); }
+    }
+    
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    @keyframes headerShine {
+        0% { left: -100%; }
+        50% { left: 100%; }
+        100% { left: 100%; }
+    }
+    
+    @keyframes logoFloat {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-5px); }
+    }
+    
+    @keyframes userInfoGlow {
+        0%, 100% { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+        50% { box-shadow: 0 6px 24px rgba(255,255,255,0.2); }
     }
     
     @keyframes alertPulse {
         0%, 100% { 
-            background: linear-gradient(45deg, #dc2626, #b91c1c, #dc2626);
             transform: scale(1);
+            box-shadow: 0 4px 20px rgba(220, 38, 38, 0.4);
         }
         50% { 
-            background: linear-gradient(45deg, #b91c1c, #dc2626, #b91c1c);
-            transform: scale(1.01);
+            transform: scale(1.005);
+            box-shadow: 0 6px 30px rgba(220, 38, 38, 0.6);
         }
     }
     
     @keyframes shake {
         0%, 100% { transform: translateX(0); }
-        25% { transform: translateX(-2px); }
-        75% { transform: translateX(2px); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+        20%, 40%, 60%, 80% { transform: translateX(2px); }
     }
     
-    @keyframes shine {
-        0% { left: -100%; }
-        100% { left: 100%; }
+    @keyframes gradientFlow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    @keyframes iconBounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(-50%) scale(1); }
+        40% { transform: translateY(-50%) scale(1.2); }
+        60% { transform: translateY(-50%) scale(1.1); }
     }
     
     @keyframes glow {
         0%, 100% { 
-            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4);
+            box-shadow: 0 4px 20px rgba(217, 119, 6, 0.4);
         }
         50% { 
-            box-shadow: 0 6px 18px rgba(217, 119, 6, 0.6);
+            box-shadow: 0 8px 30px rgba(217, 119, 6, 0.7);
         }
     }
     
     @keyframes colorShift {
-        0%, 100% { 
-            background: linear-gradient(45deg, #d97706, #b45309, #d97706);
-        }
-        50% { 
-            background: linear-gradient(45deg, #b45309, #d97706, #b45309);
-        }
+        0%, 100% { filter: hue-rotate(0deg); }
+        50% { filter: hue-rotate(10deg); }
+    }
+    
+    @keyframes lockPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.2); }
     }
     
     @keyframes gentlePulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.95; }
+        0%, 100% { 
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% { 
+            opacity: 0.95;
+            transform: scale(1.005);
+        }
+    }
+    
+    @keyframes bannerShine {
+        0% { left: -100%; }
+        50% { left: 100%; }
+        100% { left: 100%; }
+    }
+    
+    @keyframes cardEntrance {
+        0% {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes iconSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    @keyframes statusPulse {
+        0%, 100% { 
+            transform: scale(1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        50% { 
+            transform: scale(1.05);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+        }
+    }
+    
+    @keyframes buttonHover {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-2px); }
+        100% { transform: translateY(0); }
     }
     
     .control-button {
         background: rgba(255,255,255,0.15) !important;
         color: white !important;
         border: 1px solid rgba(255,255,255,0.3) !important;
-        border-radius: 8px !important;
-        padding: 0.5rem 1rem !important;
+        border-radius: 10px !important;
+        padding: 0.6rem 1.2rem !important;
         transition: all 0.3s ease !important;
+        backdrop-filter: blur(10px) !important;
+        font-weight: 600 !important;
     }
     
     .control-button:hover {
         background: rgba(255,255,255,0.25) !important;
-        transform: translateY(-1px);
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(255,255,255,0.2) !important;
+        animation: buttonHover 0.5s ease !important;
+    }
+    
+    /* Streamlit 기본 요소 스타일 재정의 */
+    .stButton > button {
+        border-radius: 10px !important;
+        transition: all 0.3s ease !important;
+        font-weight: 600 !important;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
     }
     
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800&display=swap');
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
+    st.session_state.css_loaded = True
 
 # 로그인 페이지
 def login():
+    load_css()  # 로그인 페이지에서도 CSS 로드
     st.markdown(f"""
     <div class="bank-header">
         <div class="header-content">
@@ -525,11 +759,12 @@ def login():
         st.markdown("""
         <div style='
             background: white; 
-            border-radius: 16px; 
-            padding: 2.5rem; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 20px; 
+            padding: 3rem; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
             border: 1px solid #e2e8f0;
-            margin: 1rem 0;
+            margin: 2rem 0;
+            animation: cardEntrance 0.8s ease-out;
         '>
         """, unsafe_allow_html=True)
         
@@ -549,6 +784,7 @@ def login():
 
 # 메인 레이아웃 - 개선된 버전
 def main_layout():
+    load_css()  # 모든 페이지에서 CSS 로드 보장
     # 사용자 이름에서 일본어 부분만 추출
     user_name_jp = st.session_state.user_data['name'].split(' / ')[0]
     
@@ -626,12 +862,12 @@ def render_logout():
         st.session_state.logged_in = False
         st.rerun()
 
-# 보안 경고 표시 - 개선된 버전
+# 보안 경고 표시 - 강화된 버전
 def show_security_warnings():
     st.markdown(f'<div class="capture-warning">{get_text("no_capture")}</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="security-alert">{get_text("security_warning")}</div>', unsafe_allow_html=True)
 
-# 공지사항 배너 - 개선된 버전
+# 공지사항 배너 - 강화된 버전
 def show_announcement():
     announcements = [
         {
