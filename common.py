@@ -18,11 +18,10 @@ LANGUAGES = {
         'login': 'Login / ログイン',
         'login_error': 'Incorrect Login ID or Password / ログインIDまたはパスワードが正しくありません',
         'welcome': 'Welcome, {}',
-        'logout': 'Logout / ログアウ트',
+        'logout': 'Logout / ログアウト',
         'no_capture': '⚠️ SCREEN CAPTURE AND PHOTOGRAPHY PROHIBITED / この画面のスクリーンショット・撮影は禁止されています',
         'security_warning': '🔒 SECURITY WARNING: THIS PAGE IS MONITORED / セキュリティ警告: このページは監視されています',
         'announcement': '📢 Announcement / お知らせ',
-        'announcement_content': 'System Maintenance: Dec 25th 2:00-4:00 / システムメンテナンス: 12月25日 2:00-4:00',
         'account_number': 'Account Number / 口座番号',
         'quick_access': 'Quick Access / クイックアクセス',
         'recent_transactions': 'Recent Transactions / 最近の取引',
@@ -82,7 +81,6 @@ LANGUAGES = {
         'no_capture': '⚠️ この画面のスクリーンショット・撮影は禁止されています / SCREEN CAPTURE AND PHOTOGRAPHY PROHIBITED',
         'security_warning': '🔒 セキュリティ警告: このページは監視されています / SECURITY WARNING: THIS PAGE IS MONITORED',
         'announcement': '📢 お知らせ / Announcement',
-        'announcement_content': 'システムメンテナンス: 12月25日 2:00-4:00 / System Maintenance: Dec 25th 2:00-4:00',
         'account_number': '口座番号 / Account Number',
         'quick_access': 'クイックアクセス / Quick Access',
         'recent_transactions': '最近の取引 / Recent Transactions',
@@ -263,7 +261,6 @@ def load_css():
         display: flex;
         align-items: center;
         gap: 1rem;
-        flex: 1;
     }
     
     .controls-right {
@@ -383,20 +380,25 @@ def load_css():
     }
     
     .announcement-item {
-        padding: 1rem 0;
+        padding: 1rem;
         border-bottom: 1px solid #f1f5f9;
         display: flex;
         align-items: flex-start;
         gap: 0.8rem;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 0.8rem;
     }
     
     .announcement-item:last-child {
         border-bottom: none;
+        margin-bottom: 0;
     }
     
     .announcement-icon {
         font-size: 1.2rem;
         margin-top: 0.2rem;
+        flex-shrink: 0;
     }
     
     .announcement-content {
@@ -405,13 +407,22 @@ def load_css():
     
     .announcement-title {
         font-weight: 600;
-        margin-bottom: 0.3rem;
+        margin-bottom: 0.5rem;
         color: #1e293b;
+        font-size: 1rem;
+    }
+    
+    .announcement-text {
+        color: #475569;
+        font-size: 0.9rem;
+        margin-bottom: 0.3rem;
+        line-height: 1.4;
     }
     
     .announcement-date {
         font-size: 0.8rem;
         color: #64748b;
+        font-weight: 500;
     }
     
     /* 메트릭 카드 */
@@ -520,12 +531,38 @@ def main_layout():
     # 상단 컨트롤 - 개선된 레이아웃
     st.markdown('<div class="top-controls">', unsafe_allow_html=True)
     
-    # 왼쪽 컨트롤 그룹
+    # 왼쪽: Online 상태와 날짜
     st.markdown('<div class="controls-left">', unsafe_allow_html=True)
     
-    col1, col2 = st.columns([1, 1])
+    col1, col2 = st.columns(2)
     
     with col1:
+        # 온라인 상태 표시
+        st.markdown("""
+        <div class="status-indicator status-online">
+            <div style="width: 8px; height: 8px; background: #16a34a; border-radius: 50%;"></div>
+            Online / オンライン
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        # 현재 시간 (검정색으로 변경)
+        current_time = datetime.now().strftime("%Y/%m/%d %H:%M")
+        st.markdown(f"""
+        <div class="control-info">
+            <span>📅</span>
+            <span style="color: #1e293b;">{current_time}</span>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # 오른쪽: 언어 변경과 로그아웃
+    st.markdown('<div class="controls-right">', unsafe_allow_html=True)
+    
+    col3, col4 = st.columns(2)
+    
+    with col3:
         # 언어 전환 버튼
         current_lang = st.session_state.language
         if st.button("🌐 English / 日本語", key="lang_switcher", use_container_width=True,
@@ -533,39 +570,11 @@ def main_layout():
             st.session_state.language = 'EN' if current_lang == 'JP' else 'JP'
             st.rerun()
     
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # 오른쪽 컨트롤 그룹
-    st.markdown('<div class="controls-right">', unsafe_allow_html=True)
-    
-    with col2:
-        # 상태와 시간을 포함한 정보 그룹
-        col2_1, col2_2, col2_3 = st.columns([1, 1, 1])
-        
-        with col2_1:
-            # 온라인 상태 표시
-            st.markdown("""
-            <div class="status-indicator status-online">
-                <div style="width: 8px; height: 8px; background: #16a34a; border-radius: 50%;"></div>
-                Online / オンライン
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2_2:
-            # 현재 시간 (검정색으로 변경)
-            current_time = datetime.now().strftime("%Y/%m/%d %H:%M")
-            st.markdown(f"""
-            <div class="control-info">
-                <span>📅</span>
-                <span style="color: #1e293b;">{current_time}</span>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2_3:
-            # 로그아웃 버튼
-            if st.button(get_text('logout'), key="logout_btn", use_container_width=True, type="secondary"):
-                st.session_state.logged_in = False
-                st.rerun()
+    with col4:
+        # 로그아웃 버튼
+        if st.button(get_text('logout'), key="logout_btn", use_container_width=True, type="secondary"):
+            st.session_state.logged_in = False
+            st.rerun()
     
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -607,11 +616,9 @@ def show_announcement():
     st.markdown(f'''
     <div class="announcement-banner">
         <span>📢</span>
-        <span>{get_text("announcement_content")}</span>
+        <span>お知らせ / Announcements</span>
     </div>
     ''', unsafe_allow_html=True)
-    
-    st.markdown("### 📢 お知らせ / Announcements")
     
     # 공지사항 섹션에 새로운 클래스 적용
     st.markdown('<div class="announcements-section">', unsafe_allow_html=True)
@@ -628,7 +635,7 @@ def show_announcement():
             <div class="announcement-icon" style="color: {priority_color};">{announcement['icon']}</div>
             <div class="announcement-content">
                 <div class="announcement-title">{announcement['title']}</div>
-                <div>{announcement['content']}</div>
+                <div class="announcement-text">{announcement['content']}</div>
                 <div class="announcement-date">{announcement['date']}</div>
             </div>
         </div>
