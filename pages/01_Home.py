@@ -1,4 +1,4 @@
-# pages/01_🏠_ホーム.py
+# pages/01_Home.py
 import streamlit as st
 import pandas as pd
 from common import get_text, show_security_warnings, show_announcement, main_layout
@@ -84,12 +84,16 @@ def render_home():
     
     with col1:
         if st.button("💰 新規積立作成", use_container_width=True, type="primary"):
-            st.switch_page("pages/02_💰_積立.py")
+            st.switch_page("pages/02_Savings.py")
     
     with col2:
         if st.button("📊 積立一覧表示", use_container_width=True):
-            st.switch_page("pages/02_💰_積立.py")
+            st.switch_page("pages/02_Savings.py")
     
     with col3:
         if st.button("📄 給与明細作成", use_container_width=True):
-            st.switch_page("pages/03_📄_給与.py")
+            st.switch_page("pages/03_Payroll.py")
+
+# Streamlit이 이 페이지를 로드할 때 실행
+if __name__ == "__main__":
+    render_home()
